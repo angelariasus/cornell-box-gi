@@ -1,5 +1,11 @@
-<!-- Per-method settings, display settings and the advanced debug view. -->
+<!--
+  Per-method settings, comparison, display settings and the advanced debug view, each in a
+  collapsible section. The settings of the current method start open; the rest start closed.
+-->
 <script>
+  import Info from './Info.svelte';
+  import SamplePresets from './SamplePresets.svelte';
+  import Section from './Section.svelte';
   import Slider from './Slider.svelte';
   import Toggle from './Toggle.svelte';
   import { fmt, t } from '../i18n/index.js';
@@ -53,8 +59,7 @@
 </script>
 
 {#if $params.mode === 'radiosity'}
-  <section class="group" aria-labelledby="radiosity-heading">
-    <h2 id="radiosity-heading">{$t('radiosity.heading')}</h2>
+  <Section title={$t('radiosity.heading')}>
     <Slider
       label={$t('radiosity.patches')}
       min={2}
@@ -129,14 +134,13 @@
     <Toggle
       label={$t('radiosity.smooth')}
       bind:checked={$params.radiosityInterpolate}
-      hint={$t('radiosity.smoothHint')}
+      info={$t('radiosity.smoothHint')}
     />
-  </section>
+  </Section>
 {/if}
 
 {#if $params.mode === 'path'}
-  <section class="group" aria-labelledby="path-heading">
-    <h2 id="path-heading">{$t('path.heading')}</h2>
+  <Section title={$t('path.heading')}>
     <Slider
       label={$t('path.bounces')}
       min={1}
@@ -147,7 +151,10 @@
     />
     <Toggle label={$t('path.nee')} bind:checked={$params.pathNextEvent} hint={$t('path.neeHint')} />
     <div class="field">
-      <span id="sampling-label">{$t('path.sampling')}</span>
+      <span class="field-label">
+        <span id="sampling-label">{$t('path.sampling')}</span>
+        <Info text={$t('path.samplingHint')} />
+      </span>
       <div class="segmented" role="radiogroup" aria-labelledby="sampling-label">
         {#each [[true, 'cosine'], [false, 'uniform']] as [value, key] (key)}
           <button
@@ -161,36 +168,18 @@
           </button>
         {/each}
       </div>
-      <p class="hint">{$t('path.samplingHint')}</p>
     </div>
     <Toggle
       label={$t('path.roulette')}
       bind:checked={$params.pathRussianRoulette}
-      hint={$t('path.rouletteHint')}
+      info={$t('path.rouletteHint')}
     />
-    <Slider
-      label={$t('path.samplesPerFrame')}
-      min={0}
-      max={8}
-      step={1}
-      bind:value={$params.samplesPerFrame}
-      format={(v) => (Number(v) === 0 ? $t('path.auto') : String(v))}
-      hint={$t('path.samplesPerFrameHint')}
-    />
-    <Slider
-      label={$t('path.maxSamples')}
-      min={4}
-      max={14}
-      step={1}
-      bind:value={() => Math.log2($params.pathMaxSamples), (v) => ($params.pathMaxSamples = 2 ** v)}
-      format={(v) => $fmt(2 ** v)}
-    />
-  </section>
+    <SamplePresets label={$t('path.quality')} />
+  </Section>
 {/if}
 
 {#if $params.mode === 'whitted'}
-  <section class="group" aria-labelledby="whitted-heading">
-    <h2 id="whitted-heading">{$t('whitted.heading')}</h2>
+  <Section title={$t('whitted.heading')}>
     <Slider
       label={$t('whitted.depth')}
       min={0}
@@ -206,23 +195,22 @@
       step={0.01}
       bind:value={$params.glassIor}
       format={fixed(2)}
-      hint={$t('whitted.iorHint')}
+      info={$t('whitted.iorHint')}
     />
     <Toggle
       label={$t('whitted.inspector')}
       bind:checked={$params.rayInspector}
       hint={$t('whitted.inspectorHint')}
     />
-  </section>
+  </Section>
 {/if}
 
 {#if showCaustics}
-  <section class="group" aria-labelledby="caustics-heading">
-    <h2 id="caustics-heading">{$t('caustics.heading')}</h2>
+  <Section title={$t('caustics.heading')}>
     <Toggle
       label={$t('caustics.toggle')}
       bind:checked={$params.causticsEnabled}
-      hint={$t('caustics.toggleHint')}
+      info={$t('caustics.toggleHint')}
     />
     {#if $params.causticsEnabled}
       <Slider
@@ -243,7 +231,7 @@
         step={1}
         bind:value={$params.causticsRadius}
         format={(v) => $t('caustics.radiusValue', { n: $fmt(v) })}
-        hint={$t('caustics.radiusHint')}
+        info={$t('caustics.radiusHint')}
       />
       {#if $causticsState.status === 'tracing'}
         <div class="solving" role="status">
@@ -264,14 +252,14 @@
         </p>
       {/if}
     {/if}
-  </section>
+  </Section>
 {/if}
 
 {#if $params.mode === 'phong' || $params.mode === 'whitted'}
-  <section class="group" aria-labelledby="phong-heading">
-    <h2 id="phong-heading">
-      {$params.mode === 'whitted' ? $t('phong.localHeading') : $t('phong.heading')}
-    </h2>
+  <Section
+    title={$params.mode === 'whitted' ? $t('phong.localHeading') : $t('phong.heading')}
+    open={$params.mode === 'phong'}
+  >
     <Slider
       label={$t('phong.shininess')}
       min={0}
@@ -296,21 +284,23 @@
       step={0.005}
       bind:value={$params.phongAmbient}
       format={fixed(3)}
-      hint={$t('phong.ambientHint')}
+      info={$t('phong.ambientHint')}
     />
-  </section>
+  </Section>
 {/if}
 
-<section class="group" aria-labelledby="compare-heading">
-  <h2 id="compare-heading">{$t('compare.heading')}</h2>
+<Section title={$t('compare.heading')} open={false}>
   <Toggle
     label={$t('compare.split')}
     bind:checked={$params.splitView}
-    hint={$t('compare.splitHint')}
+    info={$t('compare.splitHint')}
   />
   {#if $params.splitView}
     <div class="field">
-      <span id="split-label">{$t('compare.rightSide')}</span>
+      <span class="field-label">
+        <span id="split-label">{$t('compare.rightSide')}</span>
+        <Info text={$t('compare.shared')} />
+      </span>
       <div class="segmented compact" role="radiogroup" aria-labelledby="split-label">
         {#each METHODS.filter((m) => m.available) as method (method.id)}
           <button
@@ -324,13 +314,14 @@
           </button>
         {/each}
       </div>
-      <p class="hint">{$t('compare.shared')}</p>
     </div>
+    {#if $params.splitMode === 'path' && $params.mode !== 'path'}
+      <SamplePresets label={$t('compare.pathQuality')} />
+    {/if}
   {/if}
-</section>
+</Section>
 
-<section class="group" aria-labelledby="display-heading">
-  <h2 id="display-heading">{$t('display.heading')}</h2>
+<Section title={$t('display.heading')} open={false}>
   <Slider
     label={$t('display.exposure')}
     min={-3}
@@ -342,7 +333,7 @@
   <Toggle
     label={$t('display.whiteBalance')}
     bind:checked={$params.whiteBalance}
-    hint={$t('display.whiteBalanceHint')}
+    info={$t('display.whiteBalanceHint')}
   />
   <Slider
     label={$t('display.resolution')}
@@ -352,12 +343,20 @@
     bind:value={$params.resolutionScale}
     format={(v) => `${Math.round(v * 100)}%`}
   />
-</section>
+</Section>
 
-<details class="advanced">
-  <summary>{$t('advanced.summary')}</summary>
-  <div class="group">
-    <h2 id="debug-heading">{$t('advanced.debugHeading')}</h2>
+<Section title={$t('advanced.summary')} open={false}>
+  <Slider
+    label={$t('path.samplesPerFrame')}
+    min={0}
+    max={8}
+    step={1}
+    bind:value={$params.samplesPerFrame}
+    format={(v) => (Number(v) === 0 ? $t('path.auto') : String(v))}
+    info={$t('path.samplesPerFrameHint')}
+  />
+  <div class="field">
+    <span id="debug-heading">{$t('advanced.debugHeading')}</span>
     <div class="segmented" role="radiogroup" aria-labelledby="debug-heading">
       {#each [['off', 'off'], ['albedo', 'materials'], ['normals', 'normals']] as [value, key] (value)}
         <button
@@ -372,7 +371,7 @@
       {/each}
     </div>
   </div>
-</details>
+</Section>
 
 <style>
   .compact button {
@@ -404,19 +403,5 @@
     margin: 0;
     color: var(--danger);
     font-size: 0.85rem;
-  }
-
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-    font-size: 0.85rem;
-  }
-
-  .advanced summary {
-    cursor: pointer;
-    font-size: 0.85rem;
-    color: var(--muted);
-    margin-bottom: 0.6rem;
   }
 </style>

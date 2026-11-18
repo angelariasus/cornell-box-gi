@@ -1,4 +1,4 @@
-<!-- Status shown over the canvas: compilation, radiosity progress, errors and compatibility
+<!-- Status shown at the top of the canvas: compilation, radiosity progress, errors and compatibility
      warnings. -->
 <script>
   import { t } from '../i18n/index.js';
@@ -65,7 +65,11 @@
 <style>
   .banner {
     position: absolute;
-    inset: auto 1rem 1rem 1rem;
+    top: 0.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: min(36rem, calc(100% - 16rem));
     display: flex;
     gap: 0.75rem;
     align-items: flex-start;

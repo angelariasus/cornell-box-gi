@@ -83,7 +83,7 @@
 
   .label {
     position: absolute;
-    bottom: 3.6rem;
+    bottom: 4.6rem; /* above the progress card */
     padding: 0.2rem 0.55rem;
     margin: 0 0.6rem;
     border-radius: var(--radius);

@@ -5,10 +5,11 @@ export default {
   app: {
     documentTitle: 'Visor de iluminación global · Caja de Cornell',
     title: 'Visor de iluminación global',
-    subtitle: 'La caja de Cornell renderizada con cuatro métodos de iluminación',
+    subtitle: 'Cuatro métodos de iluminación en la caja de Cornell',
     canvas: 'Caja de Cornell renderizada. Arrastra para girar y usa la rueda para acercar.',
     footer: 'Arrastra para girar · rueda o pellizco para acercar',
     language: 'Idioma',
+    moreInfo: 'Más información',
   },
   scene: { heading: 'Escena' },
   scenes: {
@@ -74,7 +75,9 @@ export default {
     samplesPerFrame: 'Muestras por cuadro',
     auto: 'Auto',
     samplesPerFrameHint: 'Auto llena cada cuadro manteniendo unos 30 fps',
-    maxSamples: 'Máximo de muestras por píxel',
+    quality: 'Muestras por píxel',
+    qualityInfo:
+      'La acumulación se detiene aquí. Cada paso cuadruplica las muestras y reduce el ruido a la mitad (1/√N); subirlo conserva las muestras ya acumuladas.',
   },
   whitted: {
     heading: 'Ajustes de Whitted',
@@ -112,6 +115,7 @@ export default {
     rightSide: 'Lado derecho',
     shared: 'Ambos lados comparten la cámara y los ajustes de arriba',
     divider: 'Divisor de la pantalla dividida',
+    pathQuality: 'Muestras por píxel del trazado de caminos',
   },
   display: {
     heading: 'Visualización',
@@ -127,12 +131,14 @@ export default {
     materials: 'Materiales',
     normals: 'Normales',
   },
-  toolbar: { officialCamera: 'Cámara oficial', restart: 'Reiniciar', savePng: 'Guardar PNG' },
+  toolbar: {
+    label: 'Vista',
+    officialCamera: 'Cámara oficial',
+    restart: 'Reiniciar',
+    savePng: 'Guardar PNG',
+  },
   stats: {
     heading: 'Estadísticas',
-    presets: 'Muestras por píxel del trazado de caminos',
-    presetsHint:
-      'Cada paso reduce el ruido a la mitad (1/√N); subirlo conserva las muestras actuales',
     progress: 'Muestras acumuladas',
     samples: 'Muestras por píxel',
     rightSide: 'Lado derecho',
