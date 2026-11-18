@@ -77,7 +77,7 @@
     padding: 0.5rem 0.75rem;
     border: 1px solid rgb(255 255 255 / 0.08);
     border-radius: calc(var(--radius) + 2px);
-    background: rgb(22 25 29 / 0.82);
+    background: var(--overlay);
     backdrop-filter: blur(6px);
     font-size: 0.8rem;
     font-variant-numeric: tabular-nums;

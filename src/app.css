@@ -1,17 +1,20 @@
 :root {
-  --bg: #111316;
-  --panel: #16191d;
-  --surface: #1d2126;
-  --surface-hover: #242930;
-  --surface-raised: #262b32;
-  --fg: #e8e8e8;
-  --muted: #9aa0a6;
-  --border: #2a2e33;
-  --accent: #e0a526;
-  --accent-soft: rgb(224 165 38 / 0.14);
+  --bg: #0e0e10;
+  --panel: #151517;
+  --surface: #1e1e21;
+  --surface-hover: #27272b;
+  --surface-raised: #2a2a2e;
+  --fg: #ececee;
+  --muted: #9d9da6;
+  --border: #2c2c31;
+  --accent: #5b9cff;
+  --accent-soft: rgb(91 156 255 / 0.16);
   --danger: #ff8a80;
+  --warning: #e0a526;
   --success: #7cc47f;
   --radius: 8px;
+  /* Translucent panel colour for the cards over the canvas. */
+  --overlay: rgb(21 21 23 / 0.82);
 
   color-scheme: dark;
   font-family:

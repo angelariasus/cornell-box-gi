@@ -83,7 +83,7 @@
   }
 
   .banner.warning {
-    color: var(--accent);
+    color: var(--warning);
   }
 
   .banner.error {
