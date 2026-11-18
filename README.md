@@ -12,6 +12,7 @@
 [![Vitest](https://img.shields.io/badge/Vitest-114%20tests-6E9F18?logo=vitest&logoColor=white)](https://vitest.dev)
 [![pnpm](https://img.shields.io/badge/pnpm-11-F69220?logo=pnpm&logoColor=white)](https://pnpm.io)
 [![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A520-5FA04E?logo=nodedotjs&logoColor=white)](https://nodejs.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ![The classic Cornell box rendered with Phong, radiosity and path tracing](docs/captures/capture-1-classic-phong-radiosity-path.png)
 
@@ -27,8 +28,8 @@ materials and camera stay the same, so the only thing that changes is the method
 is hand-written in GLSL and runs on the GPU in real time. There is no rendering library and no
 backend.
 
-It was built as the graphics application for the report _Modelos de iluminación global_ (Group 5,
-Computación Visual, Universidad Nacional Mayor de San Marcos). The automated tests reproduce the
+It was built as the graphics application for the report _Modelos de iluminación global_
+(Computación Visual, Universidad Nacional Mayor de San Marcos). The automated tests reproduce the
 report's worked examples.
 
 ## Features
@@ -214,6 +215,10 @@ docs/                 manual, verification log, captures
   Heckbert (1990), Jensen (1996) and Pharr, Jakob & Humphreys,
   [_Physically Based Rendering_](https://pbr-book.org/) (4th ed., 2023).
 
-## Authors
+## Author
 
-Group 5, Computación Visual, Universidad Nacional Mayor de San Marcos (UNMSM), 2026.
+[@angelariasus](https://github.com/angelariasus)
+
+## License
+
+Released under the [MIT License](LICENSE).
