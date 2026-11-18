@@ -1,8 +1,9 @@
 <script>
   import { onMount } from 'svelte';
   import { createRenderer } from './render/renderer.js';
-  import { createScene } from './scene/cornell.js';
+  import { CORNELL_SCALE, createScene } from './scene/cornell.js';
   import { params, rendererParams, stats, status } from './state/params.js';
+  import { createCausticsController } from './state/caustics.js';
   import { createRadiosityController } from './state/radiosity.js';
   import Controls from './ui/Controls.svelte';
   import InfoBox from './ui/InfoBox.svelte';
@@ -26,6 +27,7 @@
     window.viewerParams = params;
 
     const radiosity = createRadiosityController(renderer);
+    const caustics = createCausticsController(renderer);
 
     let scene = null;
     let shownStep = null;
@@ -49,11 +51,22 @@
           radiosity.show(shownStep);
         }
       }
+
+      // The caustic photon map is traced on demand for scenes with mirrors or glass.
+      const usesCaustics = p.mode === 'whitted' || p.mode === 'path';
+      if (usesCaustics && p.causticsEnabled && scene.spheres.length > 0) {
+        caustics.trace(scene, {
+          photons: p.causticsPhotons,
+          radius: p.causticsRadius * CORNELL_SCALE,
+          ior: p.glassIor,
+        });
+      }
     });
 
     return () => {
       unsubscribe();
       radiosity.dispose();
+      caustics.dispose();
       renderer.dispose();
     };
   });

@@ -19,7 +19,8 @@
       source: 'Report: Chapter 3, Example 2',
       try: {
         classic: 'With only diffuse walls it looks exactly like Phong: no indirect light.',
-        spheres: 'Lower Max depth to 0 and 1, or set the glass index to 1.00.',
+        spheres:
+          'Lower Max depth to 0 and 1, or set the glass index to 1.00. Photon-mapped caustics add the light Whitted misses.',
       },
     },
     path: {
@@ -29,7 +30,8 @@
       try: {
         classic:
           'Turn next event estimation off, then switch to uniform sampling: same image, more noise.',
-        spheres: 'Look under the glass sphere: the caustic (LSDE) is the slowest part to converge.',
+        spheres:
+          'Look under the glass sphere: the caustic (LSDE) converges slowly. Then turn photon-mapped caustics on.',
       },
     },
     radiosity: {

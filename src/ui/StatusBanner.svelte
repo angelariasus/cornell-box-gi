@@ -3,6 +3,7 @@
 <script>
   import { params, status } from '../state/params.js';
   import { radiosityState } from '../state/radiosity.js';
+  import { causticsState } from '../state/caustics.js';
 
   let dismissedWarning = $state(false);
 
@@ -27,6 +28,9 @@
               ? 'Computing form factors'
               : 'Solving radiosity';
           return { kind: 'info', text: `${what}… ${$radiosityState.pct}%` };
+        }
+        if ($params.causticsEnabled && $causticsState.status === 'tracing') {
+          return { kind: 'info', text: `Tracing photons… ${$causticsState.pct}%` };
         }
         if ($status.format && $status.format !== 'float32' && !dismissedWarning) {
           return {

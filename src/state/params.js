@@ -35,6 +35,10 @@ export const DEFAULT_PARAMS = Object.freeze({
   radiosityIterations: 24,
   radiosityStep: -1, // snapshot shown; -1 = the last one (converged)
   radiosityInterpolate: true,
+  // Photon-mapped caustics (spheres scene, Whitted and path tracing)
+  causticsEnabled: false,
+  causticsPhotons: 500_000,
+  causticsRadius: 15, // search radius r in data units (Example 5)
   // Debug view
   debugView: 'albedo',
 });

@@ -14,6 +14,7 @@
 //   total internal reflection. Glass blocks shadow rays, so there are no caustics.
 // Mirror and glass get no local highlight of their own: the reflected ray reaches the area
 // light itself, which already produces the highlight.
+// With photon-mapped caustics on, diffuse surfaces also add the caustic irradiance.
 
 #define STACK_SIZE 16
 #define MAX_TASKS 128
@@ -50,6 +51,9 @@ vec3 shade(Ray primary) {
     vec3 albedo = materialAlbedo(hit.material, hit);
     if (type == MAT_DIFFUSE) {
       color += task.weight * localIllumination(hit, -task.ray.dir, albedo, uSpecular, uShininess);
+      // Optional photon-mapped caustic (caustics.glsl): the light that reaches this point
+      // through the mirror or the glass, which Whitted's shadow rays cannot follow.
+      color += task.weight * albedo * INV_PI * causticIrradiance(hit);
       continue;
     }
 

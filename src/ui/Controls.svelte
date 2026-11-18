@@ -3,6 +3,12 @@
   import Slider from './Slider.svelte';
   import Toggle from './Toggle.svelte';
   import { radiosityState } from '../state/radiosity.js';
+  import { causticsState } from '../state/caustics.js';
+
+  const showCaustics = $derived(
+    $params.scene === 'spheres' && ($params.mode === 'whitted' || $params.mode === 'path'),
+  );
+  const formatPhotons = (v) => `${Math.round(2 ** v / 1000).toLocaleString('en-US')}k`;
 
   const SOLVERS = [
     ['gauss-seidel', 'Gauss-Seidel'],
@@ -201,6 +207,56 @@
       format={fixed(2)}
       hint="1.00 = air (no refraction) · 1.50 = glass · 2.00 ≈ diamond"
     />
+  </section>
+{/if}
+
+{#if showCaustics}
+  <section class="group" aria-labelledby="caustics-heading">
+    <h2 id="caustics-heading">Caustics (photon map)</h2>
+    <Toggle
+      label="Photon-mapped caustics"
+      bind:checked={$params.causticsEnabled}
+      hint="Light through the glass and off the mirror, traced from the lamp (Chapter 6)"
+    />
+    {#if $params.causticsEnabled}
+      <Slider
+        label="Photons"
+        min={17}
+        max={21}
+        step={0.5}
+        bind:value={
+          () => Math.log2($params.causticsPhotons),
+          (v) => ($params.causticsPhotons = Math.round(2 ** v))
+        }
+        format={formatPhotons}
+      />
+      <Slider
+        label="Search radius r"
+        min={4}
+        max={60}
+        step={1}
+        bind:value={$params.causticsRadius}
+        format={(v) => `${v} units`}
+        hint="Large r: smooth but blurry (bias). Small r: sharp but noisy (Example 5)"
+      />
+      {#if $causticsState.status === 'tracing'}
+        <div class="solving" role="status">
+          <span>Tracing photons… {$causticsState.pct}%</span>
+          <div class="progress">
+            <div class="bar" style:width="{$causticsState.pct}%"></div>
+          </div>
+        </div>
+      {:else if $causticsState.status === 'error'}
+        <p class="error">{$causticsState.error}</p>
+      {:else if $causticsState.stats}
+        <p class="hint">
+          {$causticsState.stats.stored.toLocaleString('en-US')} caustic photons stored of
+          {$causticsState.stats.emitted.toLocaleString('en-US')} · {Math.round(
+            $causticsState.stats.ms,
+          )} ms
+        </p>
+      {/if}
+    {/if}
   </section>
 {/if}
 
