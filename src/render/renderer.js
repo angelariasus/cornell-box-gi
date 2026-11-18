@@ -26,6 +26,7 @@ import accumulateGlsl from './shaders/accumulate.glsl?raw';
 import displayFrag from './shaders/display.frag?raw';
 import debugFrag from './shaders/debug.frag?raw';
 import localGlsl from './shaders/local.glsl?raw';
+import causticsGlsl from './shaders/caustics.glsl?raw';
 import phongFrag from './shaders/phong.frag?raw';
 import whittedFrag from './shaders/whitted.frag?raw';
 import pathtracerFrag from './shaders/pathtracer.frag?raw';
@@ -40,6 +41,10 @@ const RECALIBRATION_FRAMES = 90;
 const STATS_INTERVAL_MS = 250;
 
 const LOCAL = { name: 'local.glsl', source: localGlsl };
+const CAUSTICS = { name: 'caustics.glsl', source: causticsGlsl };
+
+const RADIOSITY_NAMES = { flag: 'uHasRadiosity', sampler: 'uRadiosity', layout: 'uPatchLayout' };
+const CAUSTIC_NAMES = { flag: 'uHasCaustics', sampler: 'uCaustics', layout: 'uCausticLayout' };
 
 /**
  * Per-mode settings. `parts` are shared GLSL files inserted between common.glsl and the
@@ -57,14 +62,14 @@ const MODES = {
   whitted: {
     source: whittedFrag,
     file: 'whitted.frag',
-    parts: [LOCAL],
+    parts: [LOCAL, CAUSTICS],
     maxSamples: 16,
     toneMapping: 1,
   },
   path: {
     source: pathtracerFrag,
     file: 'pathtracer.frag',
-    parts: [],
+    parts: [CAUSTICS],
     maxSamples: null, // set by params.pathMaxSamples
     // Noisy images gain little from more pixels: render path tracing at CSS resolution on
     // high-density screens (up to 4x fewer paths per sample on a 200% display).
@@ -116,6 +121,7 @@ const DEFAULT_PARAMS = {
   pathCosineSampling: true,
   pathRussianRoulette: true,
   radiosityInterpolate: true,
+  causticsEnabled: false,
   whiteBalance: true,
 };
 
@@ -143,6 +149,9 @@ const KEEP_ACCUMULATION = new Set([
   'radiosityMethod',
   'radiosityIterations',
   'radiosityStep',
+  // Photon map settings: the image changes only when the new photon map arrives.
+  'causticsPhotons',
+  'causticsRadius',
 ]);
 
 /**
@@ -161,8 +170,9 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
 
   let scene = null;
   let packed = null;
-  let radiosityTexture = null;
-  let radiosity = null; // { data: Float32Array RGBA, width, height, layout: Float32Array }
+  // Per-cell data uploaded as float textures, one texel per patch or cell: the radiosity
+  // solution and the caustic photon map. Each: { data, width, height, layout, sceneId, texture }.
+  const cellData = { radiosity: null, caustics: null };
   let mode = 'phong';
   let params = { ...DEFAULT_PARAMS };
 
@@ -231,43 +241,90 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
 
     ready = true;
     resizeTargets(true);
-    uploadRadiosity(); // after a context restore
+    uploadCellData(cellData.radiosity); // after a context restore
+    uploadCellData(cellData.caustics);
     status('ready', { format: context.format.label });
     rafId = requestAnimationFrame(frame);
   }
 
-  /** Copies the current radiosity solution into its float texture (one texel per patch). */
-  function uploadRadiosity() {
-    if (!ready || !radiosity) return;
+  /**
+   * Packs n RGB values (n × 3) and the per-quad layout of a radiosity or photon worker into
+   * texture-ready arrays. `sceneId` guards against showing data on the wrong scene.
+   */
+  function packCellData(values, layout, count, sceneId) {
+    const width = layout.textureWidth;
+    const height = layout.textureHeight;
+    const data = new Float32Array(width * height * 4);
+    for (let i = 0; i < count; i++) {
+      data[i * 4] = values[i * 3];
+      data[i * 4 + 1] = values[i * 3 + 1];
+      data[i * 4 + 2] = values[i * 3 + 2];
+      data[i * 4 + 3] = 1;
+    }
+    const quads = new Float32Array(SHADER_LIMITS.MAX_QUADS * 4);
+    layout.quads.forEach((q, i) => quads.set([q.offset, q.nu, q.nv, 0], i * 4));
+    return { data, width, height, layout: quads, sceneId, texture: null };
+  }
+
+  /** Copies per-cell data into its float texture (created on first use). */
+  function uploadCellData(entry) {
+    if (!ready || !entry) return;
     const { gl } = context;
-    if (!radiosityTexture) {
-      radiosityTexture = gl.createTexture();
-      gl.bindTexture(gl.TEXTURE_2D, radiosityTexture);
+    if (!entry.texture) {
+      entry.texture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, entry.texture);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     }
-    gl.bindTexture(gl.TEXTURE_2D, radiosityTexture);
+    gl.bindTexture(gl.TEXTURE_2D, entry.texture);
     gl.texImage2D(
       gl.TEXTURE_2D,
       0,
       gl.RGBA32F,
-      radiosity.width,
-      radiosity.height,
+      entry.width,
+      entry.height,
       0,
       gl.RGBA,
       gl.FLOAT,
-      radiosity.data,
+      entry.data,
     );
     gl.bindTexture(gl.TEXTURE_2D, null);
+  }
+
+  /** Replaces one kind of cell data, freeing the previous texture. */
+  function setCellData(kind, entry) {
+    const previous = cellData[kind];
+    if (previous?.texture && context) context.gl.deleteTexture(previous.texture);
+    cellData[kind] = entry;
+    uploadCellData(entry);
+    resetAccumulation();
+  }
+
+  /**
+   * Binds cell data to a texture unit with its layout, and tells the shader whether it is
+   * there (it may be missing, for another scene, or switched off).
+   */
+  function bindCellData(program, entry, unit, names, enabled) {
+    const { gl } = context;
+    const available = Boolean(enabled && entry?.texture && entry.sceneId === scene?.id);
+    gl.uniform1i(program.loc(names.flag), available ? 1 : 0);
+    if (!available) return;
+    gl.activeTexture(gl.TEXTURE0 + unit);
+    gl.bindTexture(gl.TEXTURE_2D, entry.texture);
+    gl.uniform1i(program.loc(names.sampler), unit);
+    gl.uniform4fv(program.loc(names.layout), entry.layout);
+    gl.activeTexture(gl.TEXTURE0);
   }
 
   function releaseGpuResources() {
     if (!context) return;
     const { gl } = context;
-    if (radiosityTexture) gl.deleteTexture(radiosityTexture);
-    radiosityTexture = null;
+    for (const entry of Object.values(cellData)) {
+      if (entry?.texture) gl.deleteTexture(entry.texture);
+      if (entry) entry.texture = null;
+    }
     targets.forEach((target) => deleteTarget(gl, target));
     targets = [null, null];
     Object.values(programs).forEach((program) => program.dispose());
@@ -357,15 +414,8 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
     gl.uniform1i(program.loc('uRussianRoulette'), params.pathRussianRoulette ? 1 : 0);
 
     gl.uniform1i(program.loc('uInterpolate'), params.radiosityInterpolate ? 1 : 0);
-    const hasRadiosity = Boolean(radiosity && radiosityTexture && radiosity.sceneId === scene?.id);
-    gl.uniform1i(program.loc('uHasRadiosity'), hasRadiosity ? 1 : 0);
-    if (hasRadiosity) {
-      gl.activeTexture(gl.TEXTURE1);
-      gl.bindTexture(gl.TEXTURE_2D, radiosityTexture);
-      gl.uniform1i(program.loc('uRadiosity'), 1);
-      gl.uniform4fv(program.loc('uPatchLayout'), radiosity.layout);
-      gl.activeTexture(gl.TEXTURE0);
-    }
+    bindCellData(program, cellData.radiosity, 1, RADIOSITY_NAMES, true);
+    bindCellData(program, cellData.caustics, 3, CAUSTIC_NAMES, params.causticsEnabled);
   }
 
   function setCameraUniforms(program, width, height) {
@@ -539,7 +589,8 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
     programs = {};
     display = null;
     vao = null;
-    radiosityTexture = null; // GPU objects die with the context; the data is re-uploaded
+    // GPU objects die with the context; the cell data is re-uploaded once it is restored.
+    for (const entry of Object.values(cellData)) if (entry) entry.texture = null;
     status('context-lost');
   }
 
@@ -593,26 +644,21 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
      * a solution on the wrong scene; `null` clears it.
      */
     setRadiosity(snapshot, layout, sceneId) {
-      if (!snapshot) {
-        radiosity = null;
-        resetAccumulation();
-        return;
-      }
-      const n = layout.patchCount;
-      const width = layout.textureWidth;
-      const height = layout.textureHeight;
-      const data = new Float32Array(width * height * 4);
-      for (let i = 0; i < n; i++) {
-        data[i * 4] = snapshot[i * 3];
-        data[i * 4 + 1] = snapshot[i * 3 + 1];
-        data[i * 4 + 2] = snapshot[i * 3 + 2];
-        data[i * 4 + 3] = 1;
-      }
-      const quads = new Float32Array(SHADER_LIMITS.MAX_QUADS * 4);
-      layout.quads.forEach((q, i) => quads.set([q.offset, q.nu, q.nv, 0], i * 4));
-      radiosity = { data, width, height, layout: quads, sceneId };
-      uploadRadiosity();
-      resetAccumulation();
+      setCellData(
+        'radiosity',
+        snapshot ? packCellData(snapshot, layout, layout.patchCount, sceneId) : null,
+      );
+    },
+
+    /**
+     * Sets the caustic photon map: `irradiance` holds one RGB irradiance per cell (n × 3) and
+     * `layout` comes from the photon worker (photons/trace.js); `null` clears it.
+     */
+    setCaustics(irradiance, layout, sceneId) {
+      setCellData(
+        'caustics',
+        irradiance ? packCellData(irradiance, layout, layout.cellCount, sceneId) : null,
+      );
     },
 
     /** Moves the camera back to the official Cornell view. */

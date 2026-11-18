@@ -21,6 +21,11 @@
 //
 // The light quad ends a path: its measured reflectance (0.78) is ignored, as in Figure 14
 // of the report; the radiosity solver makes the same choice.
+//
+// Photon-mapped caustics (optional, caustics.glsl): every diffuse vertex adds the caustic
+// irradiance of the photon map, rho / pi * E. The same light must not be counted twice, so
+// paths that reach the light through a chain of specular bounces after a diffuse vertex
+// (D S+ L, i.e. the caustic seen from the camera side) are then dropped.
 
 #define MAX_BOUNCES_LIMIT 32
 #define ROULETTE_START 3
@@ -46,6 +51,8 @@ vec3 shade(Ray ray) {
   vec3 radiance = vec3(0.0);
   vec3 beta = vec3(1.0);         // path throughput
   bool countEmission = true;     // camera ray or specular bounce
+  bool afterDiffuse = false;     // the path already has a diffuse vertex
+  bool specularSinceDiffuse = false;
 
   for (int bounce = 0; bounce < MAX_BOUNCES_LIMIT; ++bounce) {
     if (bounce >= uMaxBounces) break;
@@ -55,7 +62,11 @@ vec3 shade(Ray ray) {
 
     int type = materialType(hit.material);
     if (type == MAT_EMISSIVE) {
-      if (hit.frontFace && (countEmission || !uNextEvent)) radiance += beta * lightEmission();
+      bool causticPath = afterDiffuse && specularSinceDiffuse; // D S+ L
+      bool fromPhotonMap = uHasCaustics && causticPath;
+      if (hit.frontFace && (countEmission || !uNextEvent) && !fromPhotonMap) {
+        radiance += beta * lightEmission();
+      }
       break;
     }
 
@@ -63,6 +74,9 @@ vec3 shade(Ray ray) {
 
     if (type == MAT_DIFFUSE) {
       if (uNextEvent) radiance += beta * directLight(hit, albedo);
+      radiance += beta * albedo * INV_PI * causticIrradiance(hit);
+      afterDiffuse = true;
+      specularSinceDiffuse = false;
 
       vec3 dir;
       if (uCosineSampling) {
@@ -78,6 +92,7 @@ vec3 shade(Ray ray) {
       beta *= albedo;
       ray = Ray(offsetPoint(hit.point, hit.normal), reflect(ray.dir, hit.normal));
       countEmission = true;
+      specularSinceDiffuse = true;
     } else {
       // Glass: choose reflection or refraction with the Fresnel probabilities.
       float fresnel;
@@ -89,6 +104,7 @@ vec3 shade(Ray ray) {
         ray = Ray(offsetPoint(hit.point, -hit.normal), transmitted);
       }
       countEmission = true;
+      specularSinceDiffuse = true;
     }
 
     if (uRussianRoulette && bounce >= ROULETTE_START) {
