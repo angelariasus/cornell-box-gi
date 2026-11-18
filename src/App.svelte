@@ -8,12 +8,13 @@
   import Controls from './ui/Controls.svelte';
   import InfoBox from './ui/InfoBox.svelte';
   import MethodPicker from './ui/MethodPicker.svelte';
+  import RayInspector from './ui/RayInspector.svelte';
   import ScenePicker from './ui/ScenePicker.svelte';
   import Stats from './ui/Stats.svelte';
   import StatusBanner from './ui/StatusBanner.svelte';
   import Toolbar from './ui/Toolbar.svelte';
 
-  let canvas;
+  let canvas = $state();
   let renderer = $state(null);
 
   onMount(() => {
@@ -76,6 +77,7 @@
   <section class="viewport">
     <canvas bind:this={canvas} aria-label="Rendered Cornell box. Drag to orbit, scroll to zoom."
     ></canvas>
+    <RayInspector {renderer} {canvas} />
     <StatusBanner />
   </section>
 
