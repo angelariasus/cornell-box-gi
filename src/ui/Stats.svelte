@@ -22,6 +22,10 @@
   <dl>
     <dt>Samples per pixel</dt>
     <dd>{$stats.samples} / {$stats.maxSamples}</dd>
+    {#if $stats.split}
+      <dt>Right side</dt>
+      <dd>{$stats.split.samples} / {$stats.split.maxSamples}</dd>
+    {/if}
     <dt>Resolution</dt>
     <dd>{$stats.width} × {$stats.height}</dd>
     <dt>Frame time</dt>
