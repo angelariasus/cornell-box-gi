@@ -10,6 +10,7 @@
  */
 
 import { writable } from 'svelte/store';
+import { irradianceFromRadiosity } from '../radiosity/patches.js';
 
 export const radiosityState = writable({
   status: 'idle', // 'idle' | 'solving' | 'ready' | 'error'
@@ -66,7 +67,9 @@ export function createRadiosityController(renderer) {
     if (!result) return;
     const last = result.snapshots.length - 1;
     const index = step < 0 || step > last ? last : step;
-    renderer.setRadiosity(result.snapshots[index], result.layout, result.sceneId);
+    // The renderer shows L = rho(x) · H / π, so it receives irradiance H, not radiosity B.
+    const H = irradianceFromRadiosity(result.snapshots[index], result.rho, result.E);
+    renderer.setRadiosity(H, result.layout, result.sceneId);
   }
 
   /**

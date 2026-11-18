@@ -229,7 +229,9 @@ export function createClassicScene() {
 
 /**
  * Scene B: same room and light, a mirror sphere and a glass sphere, and a checker floor
- * that makes reflection and refraction easy to see. Radiosity does not apply (not diffuse).
+ * that makes reflection and refraction easy to see. Radiosity alone cannot model the spheres
+ * (they are not diffuse), so it runs as a two-pass method: radiosity for the diffuse quads,
+ * then ray tracing through the mirror and the glass (report Section 7.1).
  */
 export function createSpheresScene() {
   const quads = roomQuads({ leftWall: MAT.RED, rightWall: MAT.GREEN }).map((q) =>
@@ -238,7 +240,8 @@ export function createSpheresScene() {
   return normalizeScene({
     id: 'spheres',
     name: 'Spheres (mirror and glass)',
-    supportsRadiosity: false,
+    supportsRadiosity: true,
+    twoPassRadiosity: true,
     quads,
     // The spheres float 1 data unit (0.2% of their size) above the floor. Touching it
     // exactly leaves a gap thinner than the ray offset near the contact point, where

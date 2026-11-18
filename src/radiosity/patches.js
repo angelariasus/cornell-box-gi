@@ -14,6 +14,41 @@
 import { add, cross, length, scale } from '../math/math.js';
 import { MATERIAL_TYPE } from '../scene/cornell.js';
 
+/**
+ * Reflectance of the part [s0, s1] × [t0, t1] of a quad. Plain materials return their albedo;
+ * the checker floor returns the average of its two colors over the patch (the same pattern as
+ * materialAlbedo() in common.glsl), estimated on an 8 × 8 grid of points.
+ */
+export function patchAlbedo(material, s0, s1, t0, t1) {
+  const tiles = material.checkerTiles ?? 0;
+  if (!tiles) return material.albedo;
+  const sum = [0, 0, 0];
+  const steps = 8;
+  for (let a = 0; a < steps; a++) {
+    for (let b = 0; b < steps; b++) {
+      const s = s0 + ((a + 0.5) / steps) * (s1 - s0);
+      const t = t0 + ((b + 0.5) / steps) * (t1 - t0);
+      const odd = (Math.floor(s * tiles) + Math.floor(t * tiles)) % 2 === 1;
+      const color = odd ? material.albedo2 : material.albedo;
+      for (let c = 0; c < 3; c++) sum[c] += color[c];
+    }
+  }
+  return sum.map((v) => v / (steps * steps));
+}
+
+/**
+ * Turns a radiosity snapshot B into the irradiance H that each patch receives, using
+ * B = E + rho · H (Equation 6 with H = Σ F_ij B_j). The display multiplies H by the reflectance
+ * of each pixel, L = rho(x) · H / π, so textures finer than a patch (the checker floor) stay
+ * sharp; for uniform patches this is exactly L = B / π. Light patches (rho = 0) get H = 0:
+ * the shader shows their emission directly.
+ */
+export function irradianceFromRadiosity(B, rho, E) {
+  const H = new Float32Array(B.length);
+  for (let k = 0; k < B.length; k++) H[k] = rho[k] > 0 ? (B[k] - E[k]) / rho[k] : 0;
+  return H;
+}
+
 /** Width of the texture the patches are packed into (patch p → texel p % W, ⌊p / W⌋). */
 export const PATCH_TEXTURE_WIDTH = 1024;
 
@@ -30,7 +65,6 @@ export function buildPatches(scene, patchesPerUnit) {
     const nv = Math.max(1, Math.round(length(quad.v) * patchesPerUnit));
     const material = scene.materials[quad.material];
     const emissive = material.type === MATERIAL_TYPE.EMISSIVE;
-    const rho = emissive ? [0, 0, 0] : material.albedo;
     const E = emissive ? scale(material.emission, Math.PI) : [0, 0, 0];
     const du = scale(quad.u, 1 / nu);
     const dv = scale(quad.v, 1 / nv);
@@ -39,6 +73,9 @@ export function buildPatches(scene, patchesPerUnit) {
     quads.push({ offset: patches.length, nu, nv });
     for (let iv = 0; iv < nv; iv++) {
       for (let iu = 0; iu < nu; iu++) {
+        const rho = emissive
+          ? [0, 0, 0]
+          : patchAlbedo(material, iu / nu, (iu + 1) / nu, iv / nv, (iv + 1) / nv);
         const origin = add(add(quad.origin, scale(du, iu)), scale(dv, iv));
         patches.push({
           quad: q,

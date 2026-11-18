@@ -37,11 +37,12 @@ describe('scene contents', () => {
     expect(classic.supportsRadiosity).toBe(true);
   });
 
-  it('spheres: 9 room quads, mirror and glass spheres, checker floor, no radiosity', () => {
+  it('spheres: 9 room quads, mirror and glass spheres, checker floor, two-pass radiosity', () => {
     expect(spheres.quads).toHaveLength(9);
     expect(spheres.spheres.map((s) => s.material)).toEqual([MAT.MIRROR, MAT.GLASS]);
     expect(spheres.quads.find((q) => q.label === 'floor').material).toBe(MAT.CHECKER);
-    expect(spheres.supportsRadiosity).toBe(false);
+    expect(spheres.supportsRadiosity).toBe(true);
+    expect(spheres.twoPassRadiosity).toBe(true);
   });
 
   it('createScene builds both scenes by id and rejects unknown ids', () => {

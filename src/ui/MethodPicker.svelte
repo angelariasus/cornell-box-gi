@@ -1,9 +1,7 @@
-<!-- Method selector. Methods that are not implemented yet, or that the scene cannot run
-     (radiosity needs diffuse surfaces only), are disabled. -->
+<!-- Method selector. In the spheres scene radiosity runs as a two-pass method with ray tracing,
+     and its description says so. -->
 <script>
   import { METHODS, methodSupported, params } from '../state/params.js';
-
-  const radiosityBlocked = $derived($params.scene !== 'classic');
 </script>
 
 <section class="group" aria-labelledby="method-heading">
@@ -20,13 +18,18 @@
           disabled={!enabled}
         />
         <span class="name">{method.name}</span>
-        <span class="detail">{method.available ? method.detail : 'Coming soon'}</span>
+        <span class="detail">
+          {#if !method.available}
+            Coming soon
+          {:else if $params.scene === 'spheres' && method.detailSpheres}
+            {method.detailSpheres}
+          {:else}
+            {method.detail}
+          {/if}
+        </span>
       </label>
     {/each}
   </div>
-  {#if radiosityBlocked}
-    <p class="hint">Radiosity only supports diffuse surfaces (LD*E).</p>
-  {/if}
 </section>
 
 <style>

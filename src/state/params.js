@@ -67,8 +67,8 @@ export const METHODS = Object.freeze([
     id: 'radiosity',
     name: 'Radiosity',
     detail: 'Diffuse interreflection · Chapter 4',
+    detailSpheres: 'Two-pass with ray tracing · Section 7.1',
     available: true,
-    diffuseOnly: true,
   },
 ]);
 
@@ -92,9 +92,12 @@ export const stats = writable({
 
 export const status = writable({ state: 'idle' });
 
-/** A method can run on a scene unless it needs diffuse-only geometry and the scene is not. */
+/**
+ * Every implemented method runs on both scenes (radiosity as a two-pass method with ray tracing
+ * in the spheres scene). Kept as a hook in case a future method or scene needs a restriction.
+ */
 export function methodSupported(method, sceneId) {
-  return method.available && !(method.diffuseOnly && sceneId !== 'classic');
+  return method.available && Boolean(sceneId);
 }
 
 /** Switches scene; a method the new scene cannot run falls back to Phong. */
