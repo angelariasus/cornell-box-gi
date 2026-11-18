@@ -2,6 +2,27 @@
 <script>
   import Slider from './Slider.svelte';
   import Toggle from './Toggle.svelte';
+  import { radiosityState } from '../state/radiosity.js';
+
+  const SOLVERS = [
+    ['gauss-seidel', 'Gauss-Seidel'],
+    ['jacobi', 'Jacobi'],
+    ['progressive', 'Progressive'],
+  ];
+
+  // Shown snapshot: the slider runs over 0..steps-1; -1 in the params means "the last one".
+  const lastStep = $derived(Math.max(0, $radiosityState.steps.length - 1));
+  const shownIndex = $derived(
+    $params.radiosityStep < 0 || $params.radiosityStep > lastStep
+      ? lastStep
+      : $params.radiosityStep,
+  );
+  const stepLabel = (index) => {
+    const value = $radiosityState.steps[index] ?? 0;
+    const plural = value === 1 ? '' : 's';
+    const unit = $radiosityState.stepUnit === 'shots' ? `shot${plural}` : `iteration${plural}`;
+    return index === lastStep ? `${value} ${unit} (final)` : `${value} ${unit}`;
+  };
   import { params } from '../state/params.js';
 
   const fixed = (digits) => (v) => Number(v).toFixed(digits);
@@ -23,6 +44,81 @@
     }
   }
 </script>
+
+{#if $params.mode === 'radiosity'}
+  <section class="group" aria-labelledby="radiosity-heading">
+    <h2 id="radiosity-heading">Radiosity settings</h2>
+    <Slider
+      label="Patches per unit"
+      min={2}
+      max={16}
+      step={1}
+      bind:value={$params.radiosityPatches}
+      hint={$radiosityState.stats
+        ? `${$radiosityState.stats.patchCount} patches · ${$radiosityState.stats.patchCount ** 2} form factors`
+        : 'Mesh resolution: each wall is about one unit wide'}
+    />
+    <div class="field">
+      <span id="solver-label">Solver</span>
+      <div class="segmented" role="radiogroup" aria-labelledby="solver-label">
+        {#each SOLVERS as [value, text] (value)}
+          <button
+            type="button"
+            role="radio"
+            aria-checked={$params.radiosityMethod === value}
+            class:active={$params.radiosityMethod === value}
+            onclick={() => {
+              $params.radiosityMethod = value;
+              $params.radiosityStep = -1;
+            }}
+          >
+            {text}
+          </button>
+        {/each}
+      </div>
+    </div>
+    {#if $params.radiosityMethod !== 'progressive'}
+      <Slider
+        label="Iterations"
+        min={1}
+        max={64}
+        step={1}
+        bind:value={$params.radiosityIterations}
+      />
+    {/if}
+
+    {#if $radiosityState.status === 'solving'}
+      <div class="solving" role="status">
+        <span>
+          {$radiosityState.phase === 'formFactors' ? 'Computing form factors' : 'Solving'}… {$radiosityState.pct}%
+        </span>
+        <div class="progress"><div class="bar" style:width="{$radiosityState.pct}%"></div></div>
+      </div>
+    {:else if $radiosityState.status === 'error'}
+      <p class="error">{$radiosityState.error}</p>
+    {:else if $radiosityState.status === 'ready'}
+      <Slider
+        label="Shown step"
+        min={0}
+        max={lastStep}
+        step={1}
+        bind:value={() => shownIndex, (v) => ($params.radiosityStep = v === lastStep ? -1 : v)}
+        format={stepLabel}
+        hint="Move back to watch the solution converge (Table 2, Figure 13b)"
+      />
+      <p class="hint">
+        Form factors {Math.round($radiosityState.stats.formFactorMs)} ms · solve
+        {Math.round($radiosityState.stats.solveMs)} ms
+      </p>
+    {/if}
+
+    <Toggle
+      label="Smooth shading"
+      bind:checked={$params.radiosityInterpolate}
+      hint="Off shows each patch flat, revealing the mesh (Section 4.4)"
+    />
+  </section>
+{/if}
 
 {#if $params.mode === 'path'}
   <section class="group" aria-labelledby="path-heading">
@@ -187,6 +283,32 @@
 </details>
 
 <style>
+  .solving {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.85rem;
+  }
+
+  .progress {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .bar {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.15s linear;
+  }
+
+  .error {
+    margin: 0;
+    color: var(--danger);
+    font-size: 0.85rem;
+  }
+
   .field {
     display: flex;
     flex-direction: column;

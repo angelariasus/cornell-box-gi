@@ -3,6 +3,7 @@
   import { createRenderer } from './render/renderer.js';
   import { createScene } from './scene/cornell.js';
   import { params, rendererParams, stats, status } from './state/params.js';
+  import { createRadiosityController } from './state/radiosity.js';
   import Controls from './ui/Controls.svelte';
   import MethodPicker from './ui/MethodPicker.svelte';
   import ScenePicker from './ui/ScenePicker.svelte';
@@ -23,18 +24,35 @@
     window.viewer = renderer;
     window.viewerParams = params;
 
-    let sceneId = null;
+    const radiosity = createRadiosityController(renderer);
+
+    let scene = null;
+    let shownStep = null;
     const unsubscribe = params.subscribe((p) => {
-      if (p.scene !== sceneId) {
-        sceneId = p.scene;
-        renderer.setScene(createScene(p.scene));
+      if (p.scene !== scene?.id) {
+        scene = createScene(p.scene);
+        renderer.setScene(scene);
       }
       renderer.setMode(p.mode);
       renderer.setParams(rendererParams(p));
+
+      // Radiosity is solved on demand, only for scenes made of diffuse surfaces.
+      if (p.mode === 'radiosity' && scene.supportsRadiosity) {
+        radiosity.solve(scene, {
+          patchesPerUnit: p.radiosityPatches,
+          method: p.radiosityMethod,
+          iterations: p.radiosityIterations,
+        });
+        if (p.radiosityStep !== shownStep) {
+          shownStep = p.radiosityStep;
+          radiosity.show(shownStep);
+        }
+      }
     });
 
     return () => {
       unsubscribe();
+      radiosity.dispose();
       renderer.dispose();
     };
   });

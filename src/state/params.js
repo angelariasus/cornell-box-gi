@@ -29,6 +29,12 @@ export const DEFAULT_PARAMS = Object.freeze({
   pathNextEvent: true,
   pathCosineSampling: true,
   pathRussianRoulette: true,
+  // Radiosity
+  radiosityPatches: 8,
+  radiosityMethod: 'gauss-seidel',
+  radiosityIterations: 24,
+  radiosityStep: -1, // snapshot shown; -1 = the last one (converged)
+  radiosityInterpolate: true,
   // Debug view
   debugView: 'albedo',
 });
@@ -57,7 +63,7 @@ export const METHODS = Object.freeze([
     id: 'radiosity',
     name: 'Radiosity',
     detail: 'Diffuse interreflection · Chapter 4',
-    available: false,
+    available: true,
     diffuseOnly: true,
   },
 ]);
