@@ -54,6 +54,9 @@ export function solveRadiosity(scene, options = {}, onProgress) {
   return {
     layout,
     snapshots: result.snapshots,
+    // Needed to turn a snapshot into irradiance for display (irradianceFromRadiosity).
+    rho: Float32Array.from(rho),
+    E: Float32Array.from(E),
     steps,
     stepUnit: method === 'progressive' ? 'shots' : 'iterations',
     stats: {

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { computeFormFactors } from '../src/radiosity/formFactors.js';
 import { buildPatches, PATCH_TEXTURE_WIDTH } from '../src/radiosity/patches.js';
 import { solveRadiosity } from '../src/radiosity/solve.js';
-import { createClassicScene, MAT } from '../src/scene/cornell.js';
+import { createClassicScene, createSpheresScene, MAT } from '../src/scene/cornell.js';
 
 const gray = [{ type: 0, albedo: [0.5, 0.5, 0.5] }];
 const quad = (origin, u, v, normal) => ({ origin, u, v, normal, material: 0 });
@@ -181,5 +181,36 @@ describe('radiosity of the classic Cornell box', () => {
     const nearGreen = B(offset + row * nu + 0);
     const nearRed = B(offset + row * nu + nu - 1);
     expect(nearRed[0] / nearRed[1]).toBeGreaterThan(nearGreen[0] / nearGreen[1]);
+  });
+});
+
+describe('two-pass radiosity support', () => {
+  it('patchAlbedo averages the checker floor and leaves plain materials alone', async () => {
+    const { patchAlbedo } = await import('../src/radiosity/patches.js');
+    const { MATERIALS, MAT } = await import('../src/scene/cornell.js');
+    const checker = MATERIALS[MAT.CHECKER];
+    // One full tile (tiles are 1/8 of the floor) is a single color; two tiles average them.
+    patchAlbedo(checker, 0, 1 / 8, 0, 1 / 8).forEach((c, i) =>
+      expect(c).toBeCloseTo(checker.albedo[i], 10),
+    );
+    const two = patchAlbedo(checker, 0, 2 / 8, 0, 1 / 8);
+    two.forEach((c, i) => expect(c).toBeCloseTo((checker.albedo[i] + checker.albedo2[i]) / 2, 10));
+    expect(patchAlbedo(MATERIALS[MAT.RED], 0, 0.5, 0, 0.5)).toBe(MATERIALS[MAT.RED].albedo);
+  });
+
+  it('irradianceFromRadiosity inverts B = E + rho H and gives 0 on the light', async () => {
+    const { irradianceFromRadiosity } = await import('../src/radiosity/patches.js');
+    const rho = [0.5, 0.5, 0.5, 0, 0, 0];
+    const E = [0, 0, 0, 50, 50, 50];
+    const B = [1.5, 1.5, 1.5, 50, 50, 50]; // patch 0: H = 3, patch 1: the light
+    expect([...irradianceFromRadiosity(B, rho, E)]).toEqual([3, 3, 3, 0, 0, 0]);
+  });
+
+  it('the spheres scene solves with the spheres as blockers and keeps energy bounded', () => {
+    const scene = createSpheresScene();
+    const result = solveRadiosity(scene, { patchesPerUnit: 6, iterations: 24 });
+    expect(result.stats.patchCount).toBeGreaterThan(100);
+    expect(result.stats.maxRowSum).toBeLessThan(1.05);
+    expect(result.rho).toHaveLength(result.stats.patchCount * 3);
   });
 });

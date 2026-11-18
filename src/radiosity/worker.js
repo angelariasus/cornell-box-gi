@@ -24,7 +24,7 @@ self.onmessage = (event) => {
     });
     self.postMessage(
       { type: 'result', id, ...result },
-      result.snapshots.map((s) => s.buffer), // transfer, do not copy
+      [...result.snapshots.map((s) => s.buffer), result.rho.buffer, result.E.buffer], // transfer
     );
   } catch (error) {
     self.postMessage({ type: 'error', id, message: String(error?.message ?? error) });
