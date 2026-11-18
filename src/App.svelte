@@ -7,7 +7,6 @@
   import { createCausticsController } from './state/caustics.js';
   import { createRadiosityController } from './state/radiosity.js';
   import Controls from './ui/Controls.svelte';
-  import InfoBox from './ui/InfoBox.svelte';
   import MethodPicker from './ui/MethodPicker.svelte';
   import RayInspector from './ui/RayInspector.svelte';
   import ScenePicker from './ui/ScenePicker.svelte';
@@ -110,7 +109,6 @@
 
     <ScenePicker />
     <MethodPicker />
-    <InfoBox />
     <Controls />
     <Toolbar {renderer} />
     <Stats />

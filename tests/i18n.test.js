@@ -18,9 +18,6 @@ function flatten(node, prefix = '', out = {}) {
 const placeholders = (text) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
 const flat = Object.fromEntries(LANGUAGES.map((l) => [l, flatten(DICTIONARIES[l])]));
 
-// Texts that are empty on purpose: the debug view has nothing to try.
-const EMPTY_ON_PURPOSE = new Set(['info.debug.tipClassic', 'info.debug.tipSpheres']);
-
 function sourceFiles(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name);
@@ -40,11 +37,10 @@ describe('language dictionaries', () => {
     }
   });
 
-  it('no text is empty, except where nothing is shown on purpose', () => {
+  it('no text is empty', () => {
     for (const language of LANGUAGES) {
       for (const [key, text] of Object.entries(flat[language])) {
-        if (EMPTY_ON_PURPOSE.has(key)) expect(text, `${language} ${key}`).toBe('');
-        else expect(text.trim().length, `${language} ${key}`).toBeGreaterThan(0);
+        expect(text.trim().length, `${language} ${key}`).toBeGreaterThan(0);
       }
     }
   });
@@ -61,12 +57,10 @@ describe('language dictionaries', () => {
     for (const key of used) expect(flat.en, key).toHaveProperty([key]);
   });
 
-  it('every key built from an id exists (methods, scenes, info, inspector)', () => {
+  it('every key built from an id exists (methods, scenes, inspector)', () => {
     const keys = [];
     for (const { id } of [...METHODS, { id: 'debug' }]) {
       keys.push(`methods.${id}.name`, `methods.${id}.detail`, `methods.${id}.short`);
-      for (const part of ['title', 'text', 'source', 'tipClassic', 'tipSpheres'])
-        keys.push(`info.${id}.${part}`);
     }
     for (const m of METHODS.filter((m) => m.hasSpheresDetail))
       keys.push(`methods.${m.id}.detailSpheres`);
