@@ -10,6 +10,7 @@
   import MethodPicker from './ui/MethodPicker.svelte';
   import RayInspector from './ui/RayInspector.svelte';
   import ScenePicker from './ui/ScenePicker.svelte';
+  import SplitDivider from './ui/SplitDivider.svelte';
   import Stats from './ui/Stats.svelte';
   import StatusBanner from './ui/StatusBanner.svelte';
   import Toolbar from './ui/Toolbar.svelte';
@@ -40,8 +41,11 @@
       renderer.setMode(p.mode);
       renderer.setParams(rendererParams(p));
 
-      // Radiosity is solved on demand, only for scenes made of diffuse surfaces.
-      if (p.mode === 'radiosity' && scene.supportsRadiosity) {
+      // Methods on screen: the main one, and the right side of the split screen.
+      const modes = p.splitView ? [p.mode, p.splitMode] : [p.mode];
+
+      // Radiosity is solved on demand.
+      if (modes.includes('radiosity') && scene.supportsRadiosity) {
         radiosity.solve(scene, {
           patchesPerUnit: p.radiosityPatches,
           method: p.radiosityMethod,
@@ -54,7 +58,7 @@
       }
 
       // The caustic photon map is traced on demand for scenes with mirrors or glass.
-      const usesCaustics = ['whitted', 'path', 'radiosity'].includes(p.mode);
+      const usesCaustics = modes.some((m) => ['whitted', 'path', 'radiosity'].includes(m));
       if (usesCaustics && p.causticsEnabled && scene.spheres.length > 0) {
         caustics.trace(scene, {
           photons: p.causticsPhotons,
@@ -77,6 +81,7 @@
   <section class="viewport">
     <canvas bind:this={canvas} aria-label="Rendered Cornell box. Drag to orbit, scroll to zoom."
     ></canvas>
+    <SplitDivider />
     <RayInspector {renderer} {canvas} />
     <StatusBanner />
   </section>

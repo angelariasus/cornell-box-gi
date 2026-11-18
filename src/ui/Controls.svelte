@@ -29,7 +29,7 @@
     const unit = $radiosityState.stepUnit === 'shots' ? `shot${plural}` : `iteration${plural}`;
     return index === lastStep ? `${value} ${unit} (final)` : `${value} ${unit}`;
   };
-  import { params } from '../state/params.js';
+  import { METHODS, params } from '../state/params.js';
 
   const fixed = (digits) => (v) => Number(v).toFixed(digits);
 
@@ -299,6 +299,34 @@
   </section>
 {/if}
 
+<section class="group" aria-labelledby="compare-heading">
+  <h2 id="compare-heading">Compare</h2>
+  <Toggle
+    label="Split screen"
+    bind:checked={$params.splitView}
+    hint="Show a second method to the right of a draggable divider"
+  />
+  {#if $params.splitView}
+    <div class="field">
+      <span id="split-label">Right side</span>
+      <div class="segmented compact" role="radiogroup" aria-labelledby="split-label">
+        {#each METHODS.filter((m) => m.available) as method (method.id)}
+          <button
+            type="button"
+            role="radio"
+            aria-checked={$params.splitMode === method.id}
+            class:active={$params.splitMode === method.id}
+            onclick={() => ($params.splitMode = method.id)}
+          >
+            {method.name.replace(' ray tracing', '')}
+          </button>
+        {/each}
+      </div>
+      <p class="hint">Both sides share the camera and the settings above</p>
+    </div>
+  {/if}
+</section>
+
 <section class="group" aria-labelledby="display-heading">
   <h2 id="display-heading">Display</h2>
   <Slider
@@ -345,6 +373,11 @@
 </details>
 
 <style>
+  .compact button {
+    padding: 0.35rem 0.2rem;
+    font-size: 0.78rem;
+  }
+
   .solving {
     display: flex;
     flex-direction: column;

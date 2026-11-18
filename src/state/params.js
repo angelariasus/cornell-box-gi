@@ -40,6 +40,10 @@ export const DEFAULT_PARAMS = Object.freeze({
   causticsEnabled: false,
   causticsPhotons: 500_000,
   causticsRadius: 15, // search radius r in data units (Example 5)
+  // Split screen: a second method to the right of a draggable divider
+  splitView: false,
+  splitMode: 'path',
+  splitPosition: 0.5, // fraction of the width
   // Debug view
   debugView: 'albedo',
 });
