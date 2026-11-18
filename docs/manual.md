@@ -3,7 +3,7 @@
 Global Illumination Viewer renders the Cornell box with four illumination methods so they can be
 compared on the same scene: Phong (local), Whitted ray tracing, path tracing and radiosity, plus
 photon-mapped caustics and a two-pass radiosity + ray tracing method for the spheres scene. It was
-built for the report _Modelos de iluminación global_ (Group 5, Computación Visual, UNMSM) and is the
+built for the report _Modelos de iluminación global_ (Computación Visual, UNMSM) and is the
 basis for its Appendix B. Measured results are in [verification.md](verification.md).
 
 - Repository: _to be published_ (GitHub)
