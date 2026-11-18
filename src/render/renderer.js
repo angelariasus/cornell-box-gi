@@ -845,9 +845,51 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
       return { width, height, samples: main.sampleCount, data };
     },
 
-    /** PNG of the current image. */
+    /**
+     * Rectangle of the canvas, in drawing-buffer pixels, covered by the scene: the bounding box
+     * of every quad corner as seen from the current camera, clipped to the canvas and shrunk to
+     * whole pixels so no background is left at the edges. The whole canvas when a corner is
+     * behind the camera (the camera is inside the box).
+     */
+    sceneRect() {
+      const full = { x: 0, y: 0, width: canvas.width, height: canvas.height };
+      if (!scene) return full;
+      const aspect = canvas.width / canvas.height;
+      const frame = camera.frame();
+      const tanHalfFov = viewTanHalfFov(camera.fovY, aspect);
+      let [minX, minY, maxX, maxY] = [Infinity, Infinity, -Infinity, -Infinity];
+      for (const { origin: o, u, v } of scene.quads) {
+        for (const [a, b] of [
+          [0, 0],
+          [1, 0],
+          [0, 1],
+          [1, 1],
+        ]) {
+          const corner = [0, 1, 2].map((i) => o[i] + a * u[i] + b * v[i]);
+          const p = projectPoint(frame, tanHalfFov, aspect, corner);
+          if (p.depth <= 0) return full;
+          minX = Math.min(minX, p.x);
+          maxX = Math.max(maxX, p.x);
+          minY = Math.min(minY, p.y);
+          maxY = Math.max(maxY, p.y);
+        }
+      }
+      const left = Math.max(0, Math.ceil(((minX + 1) / 2) * canvas.width));
+      const right = Math.min(canvas.width, Math.floor(((maxX + 1) / 2) * canvas.width));
+      const top = Math.max(0, Math.ceil(((1 - maxY) / 2) * canvas.height));
+      const bottom = Math.min(canvas.height, Math.floor(((1 - minY) / 2) * canvas.height));
+      if (right - left < 16 || bottom - top < 16) return full;
+      return { x: left, y: top, width: right - left, height: bottom - top };
+    },
+
+    /** PNG of the current image, cropped to the scene (no black background around the box). */
     capture() {
-      return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+      const { x, y, width, height } = this.sceneRect();
+      const crop = document.createElement('canvas');
+      crop.width = width;
+      crop.height = height;
+      crop.getContext('2d').drawImage(canvas, x, y, width, height, 0, 0, width, height);
+      return new Promise((resolve) => crop.toBlob(resolve, 'image/png'));
     },
 
     dispose() {
