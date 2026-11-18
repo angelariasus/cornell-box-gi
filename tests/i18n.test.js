@@ -45,6 +45,16 @@ describe('language dictionaries', () => {
     }
   });
 
+  it('no text cites the report (chapters, sections, figures, tables, examples, equations)', () => {
+    const citation =
+      /(chapter|section|figure|table|example|equation|report|cap[ií]tulo|secci[oó]n|figura|tabla|ejemplo|ecuaci[oó]n|informe)/i;
+    for (const language of LANGUAGES) {
+      for (const [key, text] of Object.entries(flat[language])) {
+        expect(text, `${language} ${key}`).not.toMatch(citation);
+      }
+    }
+  });
+
   it('every literal key used in the source exists', () => {
     const used = new Set();
     // src/i18n only defines the keys (its doc comment shows a made-up one).
