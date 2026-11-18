@@ -1,9 +1,10 @@
-// Display pass: exposure, ACES tone mapping and sRGB encoding. Identical for every method
-// so the comparison between them is fair.
+// Display pass: white balance, exposure, ACES tone mapping and sRGB encoding. Identical for
+// every method so the comparison between them is fair.
 
 uniform sampler2D uAccumulated;
 uniform float uExposure;
-uniform int uToneMapping; // 0 = none (debug view), 1 = ACES
+uniform vec3 uWhiteBalance; // per-channel gains; (1, 1, 1) disables it
+uniform int uToneMapping;   // 0 = none (debug view), 1 = white balance + ACES
 
 out vec4 outColor;
 
@@ -18,7 +19,8 @@ vec3 linearToSrgb(vec3 c) {
 }
 
 void main() {
-  vec3 color = texelFetch(uAccumulated, ivec2(gl_FragCoord.xy), 0).rgb * uExposure;
-  if (uToneMapping == 1) color = acesFilm(color);
+  vec3 color = texelFetch(uAccumulated, ivec2(gl_FragCoord.xy), 0).rgb;
+  if (uToneMapping == 1) color = acesFilm(color * uWhiteBalance * uExposure);
+  else color *= uExposure;
   outColor = vec4(linearToSrgb(color), 1.0);
 }

@@ -12,7 +12,8 @@ import { writable } from 'svelte/store';
 export const DEFAULT_PARAMS = Object.freeze({
   scene: 'classic',
   mode: 'phong',
-  exposure: 1,
+  exposure: 1.5,
+  whiteBalance: true,
   resolutionScale: 1,
   samplesPerFrame: 1,
   // Phong
@@ -22,6 +23,12 @@ export const DEFAULT_PARAMS = Object.freeze({
   // Whitted ray tracing
   whittedDepth: 5,
   glassIor: 1.5,
+  // Path tracing
+  pathMaxBounces: 8,
+  pathMaxSamples: 4096,
+  pathNextEvent: true,
+  pathCosineSampling: true,
+  pathRussianRoulette: true,
   // Debug view
   debugView: 'albedo',
 });
@@ -44,7 +51,7 @@ export const METHODS = Object.freeze([
     id: 'path',
     name: 'Path tracing',
     detail: 'Monte Carlo global illumination · Chapter 5',
-    available: false,
+    available: true,
   },
   {
     id: 'radiosity',

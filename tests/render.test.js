@@ -83,3 +83,15 @@ describe('shader limits', () => {
     for (const name of Object.keys(SHADER_LIMITS)) expect(common).toContain(name);
   });
 });
+
+describe('white balance', () => {
+  it('turns the measured light into a neutral gray of the same luminance', async () => {
+    const { whiteBalanceGains } = await import('../src/render/renderer.js');
+    const { MATERIALS } = await import('../src/scene/cornell.js');
+    const emission = MATERIALS[MAT.LIGHT].emission;
+    const gains = whiteBalanceGains(emission);
+    const balanced = emission.map((c, i) => c * gains[i]);
+    const luminance = 0.2126 * emission[0] + 0.7152 * emission[1] + 0.0722 * emission[2];
+    balanced.forEach((c) => expect(c).toBeCloseTo(luminance, 10));
+  });
+});
