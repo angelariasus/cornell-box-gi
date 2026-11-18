@@ -4,8 +4,7 @@ Draft texts for the report _Modelos de iluminación global_ (Group 5). They are 
 they go into the report as they are; the group should review them before pasting. Figure numbers
 continue the report (its last figure is Figura 21); appendix figures and tables use the appendix
 letter, as Tabla A1 and Tabla C1 do. Every number comes from measurements taken in the browser or
-from the captures in `docs/captures/`. Placeholders to fill after deployment: `{{URL_VERCEL}}`
-and `{{URL_GITHUB}}` (also in the video script).
+from the captures in `docs/captures/`.
 
 ---
 
@@ -183,7 +182,7 @@ de su código y las pruebas que la validan.
 
 ### B.1 Acceso y ejecución
 
-La aplicación está publicada en {{URL_VERCEL}} y su código fuente, en {{URL_GITHUB}}. Funciona en
+La aplicación está publicada en https://cornellbox.vercel.app/ y su código fuente, en https://github.com/angelariasus/cornell-box-gi. Funciona en
 cualquier navegador de escritorio actual compatible con WebGL2 (Chrome, Edge, Firefox o Safari) y
 no necesita servidor propio. Para ejecutarla localmente se requieren Node.js 20 o superior y el
 gestor de paquetes pnpm:
@@ -198,8 +197,10 @@ pnpm test       (pruebas automáticas)
 ### B.2 Uso
 
 La pantalla muestra la imagen a la izquierda y el panel de control a la derecha. Arrastrar sobre la
-imagen gira la cámara alrededor de la caja y la rueda del ratón la acerca o la aleja; el botón
-Cámara oficial devuelve la vista original de Cornell. El panel permite:
+imagen gira la cámara alrededor de la caja y la rueda del ratón la acerca o la aleja. Sobre la
+imagen, arriba a la derecha, tres botones devuelven la vista original de Cornell, reinician la
+acumulación de muestras y guardan la imagen en PNG; abajo a la izquierda, una tarjeta muestra las
+muestras por píxel acumuladas, una barra de progreso y el tiempo por cuadro. El panel permite:
 
 - elegir la escena (clásica o con esferas) y el método (Phong, Whitted, trazado de caminos o
   radiosidad);
@@ -213,22 +214,24 @@ Cámara oficial devuelve la vista original de Cornell. El panel permite:
 - activar el inspector de rayos, que dibuja sobre la imagen el árbol de rayos de Whitted del píxel
   seleccionado, como en la Figura 7;
 - dividir la pantalla para comparar dos métodos con la misma cámara;
-- elegir cuántas muestras por píxel acumula el trazado de caminos (256, 1024, 4096 o 16 384),
-  guardar la imagen en PNG y cambiar el idioma de la interfaz entre inglés y español.
+- elegir cuántas muestras por píxel acumula el trazado de caminos (256, 1024, 4096 o 16 384) y
+  cambiar el idioma de la interfaz entre inglés y español.
 
-El panel de estadísticas muestra las muestras acumuladas, la resolución y el tiempo por cuadro.
+Los ajustes se agrupan en secciones plegables, y las del método elegido aparecen abiertas. El botón
+de información (ⓘ) junto a un ajuste muestra una explicación más extensa, y la sección Estadísticas
+detalla la resolución, las muestras calculadas en cada cuadro y el formato del búfer.
 
 ### B.3 Estructura del código
 
-| Carpeta              | Contenido                                                                                     |
-| -------------------- | --------------------------------------------------------------------------------------------- |
-| `src/scene`          | Datos de la caja de Cornell: geometría, materiales, lámpara y cámara                          |
-| `src/render`         | Renderizador WebGL2, cámara y sombreadores de Phong, Whitted, trazado de caminos y radiosidad |
-| `src/radiosity`      | Parches, factores de forma y métodos de Jacobi, Gauss-Seidel y refinamiento progresivo        |
-| `src/photons`        | Trazado de fotones para las cáusticas y estimación de densidad                                |
-| `src/math`           | Operaciones vectoriales e intersecciones de rayos, y árbol de rayos del inspector             |
-| `src/ui`, `src/i18n` | Componentes del panel de control y textos en inglés y español                                 |
-| `tests`              | Pruebas automáticas                                                                           |
+| Carpeta              | Contenido                                                                                         |
+| -------------------- | ------------------------------------------------------------------------------------------------- |
+| `src/scene`          | Datos de la caja de Cornell: geometría, materiales, lámpara y cámara                              |
+| `src/render`         | Renderizador WebGL2, cámara y sombreadores de Phong, Whitted, trazado de caminos y radiosidad     |
+| `src/radiosity`      | Parches, factores de forma y métodos de Jacobi, Gauss-Seidel y refinamiento progresivo            |
+| `src/photons`        | Trazado de fotones para las cáusticas y estimación de densidad                                    |
+| `src/math`           | Operaciones vectoriales e intersecciones de rayos, y árbol de rayos del inspector                 |
+| `src/ui`, `src/i18n` | Componentes del panel de control y de los controles sobre la imagen, y textos en inglés y español |
+| `tests`              | Pruebas automáticas                                                                               |
 
 ### B.4 Pruebas
 

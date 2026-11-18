@@ -14,6 +14,8 @@
 [![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A520-5FA04E?logo=nodedotjs&logoColor=white)](https://nodejs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+**[Live demo: cornellbox.vercel.app](https://cornellbox.vercel.app/)**
+
 ![The classic Cornell box rendered with Phong, radiosity and path tracing](docs/captures/capture-1-classic-phong-radiosity-path.png)
 
 <sub>The measured Cornell box: Phong (left), radiosity (centre) and path tracing at 4096 samples per pixel (right).</sub>

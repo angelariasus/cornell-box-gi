@@ -13,7 +13,7 @@ tracing samples at 4k. Times are approximate.
 | 45–60 s | Spheres scene. Split screen: Whitted left, path tracing right; drag the divider.              | "Con un espejo y una esfera de vidrio, Whitted da reflejos y refracción exactos, pero sombras duras y ninguna cáustica. El trazado de caminos sí la produce, aunque lentamente."              |
 | 60–72 s | Path tracing alone; turn on _Cáusticas por mapa de fotones_.                                  | "El mapa de fotones traza la luz desde la lámpara y obtiene la cáustica limpia en pocos segundos, a cambio de un pequeño suavizado."                                                          |
 | 72–85 s | Whitted with the ray inspector on; click the glass sphere; orbit to see the tree.             | "El inspector de rayos dibuja el árbol de rayos de Whitted de un píxel: reflexión, refracción y rayos de sombra."                                                                             |
-| 85–90 s | Back to the official camera; show the address of the live version.                            | "La aplicación funciona en cualquier navegador, en {{URL_VERCEL}}."                                                                                                                           |
+| 85–90 s | Back to the official camera; show the address of the live version.                            | "La aplicación funciona en cualquier navegador, en cornellbox.vercel.app."                                                                                                                    |
 
 Tips:
 
