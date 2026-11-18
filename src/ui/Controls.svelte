@@ -1,6 +1,7 @@
 <!-- Per-method settings, display settings and the advanced debug view. -->
 <script>
   import Slider from './Slider.svelte';
+  import Toggle from './Toggle.svelte';
   import { params } from '../state/params.js';
 
   const fixed = (digits) => (v) => Number(v).toFixed(digits);
@@ -22,6 +23,66 @@
     }
   }
 </script>
+
+{#if $params.mode === 'path'}
+  <section class="group" aria-labelledby="path-heading">
+    <h2 id="path-heading">Path tracing settings</h2>
+    <Slider
+      label="Max bounces"
+      min={1}
+      max={16}
+      step={1}
+      bind:value={$params.pathMaxBounces}
+      hint="Surface interactions per path"
+    />
+    <Toggle
+      label="Next event estimation"
+      bind:checked={$params.pathNextEvent}
+      hint="Sample the light at every diffuse bounce"
+    />
+    <div class="field">
+      <span id="sampling-label">Direction sampling</span>
+      <div class="segmented" role="radiogroup" aria-labelledby="sampling-label">
+        {#each [[true, 'Cosine'], [false, 'Uniform']] as [value, text] (text)}
+          <button
+            type="button"
+            role="radio"
+            aria-checked={$params.pathCosineSampling === value}
+            class:active={$params.pathCosineSampling === value}
+            onclick={() => ($params.pathCosineSampling = value)}
+          >
+            {text}
+          </button>
+        {/each}
+      </div>
+      <p class="hint">
+        Cosine = importance sampling (Example 4b). The difference is clearest with next event
+        estimation off.
+      </p>
+    </div>
+    <Toggle
+      label="Russian roulette"
+      bind:checked={$params.pathRussianRoulette}
+      hint="End weak paths from the 4th bounce"
+    />
+    <Slider
+      label="Samples per frame"
+      min={1}
+      max={8}
+      step={1}
+      bind:value={$params.samplesPerFrame}
+      hint="Lower it if the page stutters"
+    />
+    <Slider
+      label="Max samples per pixel"
+      min={4}
+      max={14}
+      step={1}
+      bind:value={() => Math.log2($params.pathMaxSamples), (v) => ($params.pathMaxSamples = 2 ** v)}
+      format={(v) => String(2 ** v)}
+    />
+  </section>
+{/if}
 
 {#if $params.mode === 'whitted'}
   <section class="group" aria-labelledby="whitted-heading">
@@ -90,6 +151,11 @@
     bind:value={() => Math.log2($params.exposure), (v) => ($params.exposure = 2 ** v)}
     format={(v) => `×${(2 ** v).toFixed(2)}`}
   />
+  <Toggle
+    label="White balance"
+    bind:checked={$params.whiteBalance}
+    hint="Neutralize the orange measured light, like a camera"
+  />
   <Slider
     label="Resolution scale"
     min={0.25}
@@ -121,6 +187,13 @@
 </details>
 
 <style>
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.85rem;
+  }
+
   .advanced summary {
     cursor: pointer;
     font-size: 0.85rem;

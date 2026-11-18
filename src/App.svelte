@@ -18,8 +18,10 @@
       onStats: (s) => stats.set(s),
       onStatus: (s) => status.set(s),
     });
-    // Console access for testing on other machines, e.g. `viewer.benchmark(20)`.
+    // Console access for testing on other machines, e.g. `viewer.benchmark(20)` or
+    // `viewerParams.update((p) => ({ ...p, pathNextEvent: false }))`.
     window.viewer = renderer;
+    window.viewerParams = params;
 
     let sceneId = null;
     const unsubscribe = params.subscribe((p) => {
