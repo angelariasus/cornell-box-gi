@@ -7,7 +7,6 @@ export default {
     title: 'Visor de iluminación global',
     subtitle: 'Cuatro métodos de iluminación en la caja de Cornell',
     canvas: 'Caja de Cornell renderizada. Arrastra para girar y usa la rueda para acercar.',
-    footer: 'Arrastra para girar · rueda o pellizco para acercar',
     language: 'Idioma',
     moreInfo: 'Más información',
   },

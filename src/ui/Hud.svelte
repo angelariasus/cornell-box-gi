@@ -1,6 +1,6 @@
 <!--
   Progress over the canvas: accumulated samples per pixel, frame time and a progress bar, with
-  one row per side in split screen. The navigation hint sits on the right.
+  one row per side in split screen.
 -->
 <script>
   import { fmt, t } from '../i18n/index.js';
@@ -54,19 +54,13 @@
       {$stats.converged ? $t('stats.done') : `${$fmt($stats.frameMs, 1)} ms`}
     </span>
   </div>
-  <p class="navigation">{$t('app.footer')}</p>
 </div>
 
 <style>
   .hud {
     position: absolute;
     left: 0.75rem;
-    right: 0.75rem;
     bottom: 0.75rem;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 1rem;
     pointer-events: none;
   }
 
@@ -136,20 +130,5 @@
     min-width: 3.5rem;
     color: var(--muted);
     text-align: right;
-  }
-
-  .navigation {
-    margin: 0;
-    padding: 0.3rem 0.6rem;
-    border-radius: var(--radius);
-    background: rgb(0 0 0 / 0.45);
-    color: var(--muted);
-    font-size: 0.75rem;
-  }
-
-  @media (max-width: 800px) {
-    .navigation {
-      display: none;
-    }
   }
 </style>

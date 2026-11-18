@@ -5,7 +5,6 @@ export default {
     title: 'Global Illumination Viewer',
     subtitle: 'Four illumination methods on the Cornell box',
     canvas: 'Rendered Cornell box. Drag to orbit, scroll to zoom.',
-    footer: 'Drag to orbit · scroll or pinch to zoom',
     language: 'Language',
     moreInfo: 'More information',
   },
