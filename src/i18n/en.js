@@ -15,22 +15,22 @@ export default {
   },
   method: { heading: 'Method', comingSoon: 'Coming soon' },
   methods: {
-    phong: { name: 'Phong', short: 'Phong', detail: 'Local model · Chapter 1' },
+    phong: { name: 'Phong', short: 'Phong', detail: 'Local model' },
     whitted: {
       name: 'Whitted ray tracing',
       short: 'Whitted',
-      detail: 'Reflection and refraction · Chapter 3',
+      detail: 'Reflection and refraction',
     },
     path: {
       name: 'Path tracing',
       short: 'Path tracing',
-      detail: 'Monte Carlo global illumination · Chapter 5',
+      detail: 'Monte Carlo global illumination',
     },
     radiosity: {
       name: 'Radiosity',
       short: 'Radiosity',
-      detail: 'Diffuse interreflection · Chapter 4',
-      detailSpheres: 'Two-pass with ray tracing · Section 7.1',
+      detail: 'Diffuse interreflection',
+      detailSpheres: 'Two-pass with ray tracing',
     },
     debug: { name: 'Debug view', short: 'Debug', detail: 'Geometry check' },
   },
@@ -39,14 +39,14 @@ export default {
     phong: {
       title: 'Local illumination',
       text: 'Each point sees only the light, through one shadow ray. No light bounces between surfaces: the ceiling stays dark, shadows are hard and there is no color bleeding.',
-      source: 'Report: Chapter 1, Example 1',
+      source: 'Report: Example 1',
       tipClassic: 'Switch to Path tracing and watch the ceiling and the block sides light up.',
       tipSpheres: 'The mirror and the glass reflect nothing: a local model cannot follow rays.',
     },
     whitted: {
       title: 'Whitted ray tracing',
       text: 'Rays follow exact mirror reflection and refraction (Equation 4, Figure 8). Diffuse surfaces still use the local model, so it only captures LDS*E | LS*E paths.',
-      source: 'Report: Chapter 3, Example 2',
+      source: 'Report: Example 2',
       tipClassic: 'With only diffuse walls it looks exactly like Phong: no indirect light.',
       tipSpheres:
         'Lower Max depth to 0 and 1, or set the glass index to 1.00. Photon-mapped caustics add the light Whitted misses.',
@@ -54,7 +54,7 @@ export default {
     path: {
       title: 'Path tracing',
       text: 'One random path per sample solves the rendering equation by Monte Carlo (Equation 10, Figure 14). It captures every path L(D|S)*E; the noise fades as 1/√N.',
-      source: 'Report: Chapter 5, Example 4',
+      source: 'Report: Example 4',
       tipClassic:
         'Turn next event estimation off, then switch to uniform sampling: same image, more noise.',
       tipSpheres:
@@ -63,7 +63,7 @@ export default {
     radiosity: {
       title: 'Radiosity',
       text: 'An energy balance between diffuse patches (Equation 6) solved as a linear system. The solution does not depend on the camera, but it only models LD*E paths.',
-      source: 'Report: Chapter 4, Example 3',
+      source: 'Report: Example 3',
       tipClassic:
         'Orbit the camera (nothing is recomputed), move Shown step, or turn smooth shading off.',
       tipSpheres:
@@ -97,7 +97,7 @@ export default {
     stepFinal: '{step} (final)',
     timings: 'Form factors {formFactors} ms · solve {solve} ms',
     smooth: 'Smooth shading',
-    smoothHint: 'Off shows each patch flat, revealing the mesh (Section 4.4)',
+    smoothHint: 'Off shows each patch flat, revealing the mesh',
   },
   path: {
     heading: 'Path tracing settings',
@@ -129,7 +129,7 @@ export default {
   caustics: {
     heading: 'Caustics (photon map)',
     toggle: 'Photon-mapped caustics',
-    toggleHint: 'Light through the glass and off the mirror, traced from the lamp (Chapter 6)',
+    toggleHint: 'Light through the glass and off the mirror, traced from the lamp',
     photons: 'Photons',
     radius: 'Search radius r',
     radiusValue: '{n} units',
