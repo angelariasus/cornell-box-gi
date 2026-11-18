@@ -117,7 +117,7 @@ const DEFAULT_PARAMS = {
   whittedDepth: 5,
   glassIor: 1.5,
   pathMaxBounces: 8,
-  pathMaxSamples: 1024,
+  pathMaxSamples: 4096,
   pathNextEvent: true,
   pathCosineSampling: true,
   pathRussianRoulette: true,
