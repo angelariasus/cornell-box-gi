@@ -49,10 +49,10 @@
 
 {#if $params.splitView}
   <div class="split" bind:this={container}>
-    <span class="label left" style:right="{(1 - $params.splitPosition) * 100}%">
+    <span class="label overlay-card left" style:right="{(1 - $params.splitPosition) * 100}%">
       {nameOf($params.mode)}
     </span>
-    <span class="label right" style:left="{$params.splitPosition * 100}%">
+    <span class="label overlay-card right" style:left="{$params.splitPosition * 100}%">
       {nameOf($params.splitMode)}
     </span>
     <div
@@ -89,8 +89,6 @@
     bottom: 4.6rem; /* above the progress card */
     padding: 0.2rem 0.55rem;
     margin: 0 0.6rem;
-    border-radius: var(--radius);
-    background: rgb(0 0 0 / 0.65);
     font-size: 0.78rem;
     white-space: nowrap;
   }

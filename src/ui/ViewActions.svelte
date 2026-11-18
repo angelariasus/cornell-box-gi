@@ -37,7 +37,7 @@
   ];
 </script>
 
-<div class="actions" role="toolbar" aria-label={$t('toolbar.label')}>
+<div class="actions overlay-card" role="toolbar" aria-label={$t('toolbar.label')}>
   {#each ACTIONS as action (action.key)}
     <button type="button" onclick={action.run} aria-label={$t(`toolbar.${action.key}`)}>
       <HugeiconsIcon icon={action.icon} size={18} strokeWidth={1.6} aria-hidden="true" />
@@ -54,10 +54,6 @@
     display: flex;
     gap: 2px;
     padding: 3px;
-    border: 1px solid rgb(255 255 255 / 0.08);
-    border-radius: calc(var(--radius) + 2px);
-    background: var(--overlay);
-    backdrop-filter: blur(6px);
   }
 
   button {

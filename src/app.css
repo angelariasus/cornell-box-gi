@@ -113,6 +113,14 @@ button {
   font-weight: 600;
 }
 
+/* Translucent card over the canvas: progress, view buttons, ray inspector, messages. */
+.overlay-card {
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--overlay);
+  backdrop-filter: blur(6px);
+}
+
 /* Label above a segmented control; also the anchor for its ⓘ explanation. */
 .field {
   display: flex;

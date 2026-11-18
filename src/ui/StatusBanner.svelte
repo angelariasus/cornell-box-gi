@@ -48,7 +48,10 @@
 </script>
 
 {#if message}
-  <div class="banner {message.kind}" role={message.kind === 'error' ? 'alert' : 'status'}>
+  <div
+    class="banner overlay-card {message.kind}"
+    role={message.kind === 'error' ? 'alert' : 'status'}
+  >
     {#if message.code}
       <pre>{message.text}</pre>
     {:else}
@@ -77,8 +80,6 @@
     gap: 0.75rem;
     align-items: flex-start;
     padding: 0.6rem 0.8rem;
-    border-radius: var(--radius);
-    background: rgb(0 0 0 / 0.78);
     font-size: 0.88rem;
   }
 

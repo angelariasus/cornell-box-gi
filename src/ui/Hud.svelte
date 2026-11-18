@@ -24,7 +24,7 @@
 </script>
 
 <div class="hud">
-  <div class="card" role="group" aria-label={$t('stats.progress')}>
+  <div class="card overlay-card" role="group" aria-label={$t('stats.progress')}>
     <div class="rows">
       {#each rows as row, i (i)}
         <div class="row">
@@ -69,10 +69,6 @@
     align-items: center;
     gap: 1rem;
     padding: 0.5rem 0.75rem;
-    border: 1px solid rgb(255 255 255 / 0.08);
-    border-radius: calc(var(--radius) + 2px);
-    background: var(--overlay);
-    backdrop-filter: blur(6px);
     font-size: 0.8rem;
     font-variant-numeric: tabular-nums;
   }
