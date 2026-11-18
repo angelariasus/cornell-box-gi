@@ -1,5 +1,5 @@
 /**
- * Web Worker that runs the radiosity pipeline off the main thread (PLAN.md, section 3.5).
+ * Web Worker that runs the radiosity pipeline off the main thread.
  *
  * In:   { type: 'solve', id, scene, patchesPerUnit, method, iterations }
  * Out:  { type: 'progress', id, phase, pct }

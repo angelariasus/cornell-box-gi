@@ -3,7 +3,7 @@
 Draft texts for the report _Modelos de iluminación global_ (Group 5). They are in Spanish because
 they go into the report as they are; the group should review them before pasting. Figure numbers
 continue the report (its last figure is Figura 21); appendix figures and tables use the appendix
-letter, as Tabla A1 and Tabla C1 do. Every number comes from [verification.md](verification.md) or
+letter, as Tabla A1 and Tabla C1 do. Every number comes from measurements taken in the browser or
 from the captures in `docs/captures/`. Placeholders to fill after deployment: `{{URL_VERCEL}}`
 and `{{URL_GITHUB}}` (also in the video script).
 

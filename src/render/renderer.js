@@ -1,6 +1,6 @@
 /**
  * Renderer: frame loop, progressive accumulation, mode switching and the public API used by
- * the UI (PLAN.md, section 3.4).
+ * the UI.
  *
  * Every frame:
  *   1. method pass: the selected method's fragment shader traces k samples per pixel and
