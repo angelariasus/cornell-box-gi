@@ -38,25 +38,37 @@ The canvas is on the left and the control panel on the right (below the canvas o
 | Click (Whitted, ray inspector) | Trace the rays of that pixel and draw their tree     |
 | Drag the ⇆ handle              | Move the split screen divider (arrow keys also work) |
 
-The panel, from top to bottom:
+Over the canvas:
+
+- **Top right: camera, restart and download buttons.** _Official camera_ returns to the camera of
+  the Cornell data. _Restart_ clears the accumulated samples. _Save PNG_ downloads the current
+  image cropped to the box. Hover a button to see its name.
+- **Bottom left: progress.** Accumulated samples per pixel against the target, a progress bar
+  (green when done) and the frame time. In split screen there is one bar per side.
+- **Top centre: messages** while shaders compile, radiosity is solved or photons are traced.
+
+The panel, from top to bottom. The title stays in place and the rest scrolls. Sections with a ›
+arrow open and close with a click; the settings of the chosen method start open. An ⓘ next to a
+setting shows a longer explanation on hover, keyboard focus or tap.
 
 1. **Title and EN | ES switch.** The interface language. The first visit follows the browser
    language; the choice is remembered.
 2. **Scene.** _Classic_: the measured Cornell box with its two blocks, all surfaces diffuse.
    _Spheres_: the same room with a mirror sphere and a glass sphere instead of the blocks.
-3. **Method.** Phong, Whitted ray tracing, path tracing or radiosity. In the spheres scene radiosity
-   runs as a two-pass method (radiosity for the walls, ray tracing through the spheres).
+3. **Method.** Phong, Whitted ray tracing, path tracing or radiosity, with the full name and a short
+   description of the chosen one underneath. In the spheres scene radiosity runs as a two-pass
+   method (radiosity for the walls, ray tracing through the spheres).
 4. **Settings of the chosen method** (section 3).
 5. **Caustics (photon map)**, spheres scene only, for Whitted, path tracing and radiosity.
 6. **Compare.** Split screen: a second method to the right of a draggable divider. Both sides share
-   the camera and the settings; each keeps its own accumulated samples.
+   the camera and the settings; each keeps its own accumulated samples. When the right side is path
+   tracing, its samples per pixel can be set here.
 7. **Display.** Exposure, white balance and resolution scale, applied the same way to every method.
-8. **Advanced.** Geometry debug view: material colors or surface normals, without lighting.
-9. **Toolbar.** _Official camera_ returns to the camera of the Cornell data. _Restart_ clears the
-   accumulated samples. _Save PNG_ downloads the current image cropped to the box.
-10. **Statistics.** Samples per pixel (and of the right side in split screen), resolution, frame
-    time, samples traced per frame and buffer format. With path tracing on screen, the 256 / 1k /
-    4k / 16k buttons set how many samples per pixel to accumulate before stopping (default 4k).
+8. **Advanced.** Samples traced per frame (_Auto_ measures the GPU and fills each frame while
+   keeping about 30 fps) and the geometry debug view: material colors or surface normals, without
+   lighting.
+9. **Statistics.** Samples per pixel (and of the right side in split screen), resolution, frame
+   time, samples traced per frame and buffer format.
 
 Images are refined progressively: each frame adds samples to an accumulation buffer, and any change
 of camera or setting starts again. Phong and Whitted converge in a few frames (the extra samples
@@ -91,14 +103,13 @@ use the Phong term, so it captures LDS\*E | LS\*E paths only. The Phong settings
 One random path per sample and pixel, averaged over thousands of samples; it captures every path
 L(D|S)\*E and its noise falls as 1/√N.
 
-| Setting               | Effect                                                                  |
-| --------------------- | ----------------------------------------------------------------------- |
-| Max bounces           | Surface interactions per path                                           |
-| Next event estimation | Samples the light directly at every diffuse bounce (much less noise)    |
-| Direction sampling    | Cosine (importance sampling) or uniform over the hemisphere             |
-| Russian roulette      | Ends weak paths randomly from the 4th bounce, without bias              |
-| Samples per frame     | _Auto_ measures the GPU and fills each frame while keeping about 30 fps |
-| Max samples per pixel | When to stop accumulating (also set by the buttons in Statistics)       |
+| Setting               | Effect                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------- |
+| Max bounces           | Surface interactions per path                                                         |
+| Next event estimation | Samples the light directly at every diffuse bounce (much less noise)                  |
+| Direction sampling    | Cosine (importance sampling) or uniform over the hemisphere                           |
+| Russian roulette      | Ends weak paths randomly from the 4th bounce, without bias                            |
+| Samples per pixel     | 256, 1k, 4k (default) or 16k: when to stop accumulating; raising it keeps the samples |
 
 ### Radiosity
 

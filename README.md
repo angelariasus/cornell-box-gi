@@ -115,11 +115,13 @@ network.
 | Mouse wheel / pinch                    | Zoom                                     |
 | Click (Whitted, ray inspector enabled) | Trace and draw the rays of that pixel    |
 | Drag the ⇆ handle                      | Move the split screen divider            |
-| _Official camera_ button               | Return to the camera of the Cornell data |
+| Camera button over the canvas          | Return to the camera of the Cornell data |
 
-The panel has the scene, the method, the settings of each method, caustics, split screen, display
-options (exposure, white balance, resolution scale) and live statistics. The
-[user manual](docs/manual.md) explains every setting and lists experiments to try.
+Buttons over the top right of the canvas reset the camera, restart the accumulation and save a PNG;
+the bottom left shows the samples per pixel, a progress bar and the frame time. The side panel has
+the scene, the method and collapsible sections for the settings of each method, caustics, split
+screen, display options (exposure, white balance, resolution scale), advanced options and detailed
+statistics. The [user manual](docs/manual.md) explains every setting and lists experiments to try.
 
 For benchmarks on other machines, the browser console exposes the renderer:
 
@@ -180,7 +182,7 @@ Timings were measured on an integrated Intel GPU.
 src/
 ├─ App.svelte         layout and wiring between stores, renderer and workers
 ├─ i18n/              English and Spanish texts
-├─ ui/                control panel components, split divider, ray inspector
+├─ ui/                control panel, canvas overlays, split divider, ray inspector
 ├─ state/             Svelte stores and the radiosity / caustics controllers
 ├─ scene/             Cornell box data, materials and shader packing
 ├─ math/              vector math, random numbers, Whitted ray tree
