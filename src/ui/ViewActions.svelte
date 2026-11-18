@@ -1,7 +1,7 @@
 <!-- Floating buttons over the canvas: official camera, restart accumulation and PNG capture. -->
 <script>
   import { HugeiconsIcon } from '@hugeicons/svelte';
-  import { Camera01Icon, Download04Icon, RefreshIcon } from '@hugeicons/core-free-icons';
+  import { Camera01Icon, Download01Icon, Refresh01Icon } from '@hugeicons/core-free-icons';
   import { t } from '../i18n/index.js';
   import { params, stats } from '../state/params.js';
 
@@ -27,12 +27,12 @@
     {
       key: 'restart',
       run: () => renderer?.restart(),
-      icon: RefreshIcon,
+      icon: Refresh01Icon,
     },
     {
       key: 'savePng',
       run: saveImage,
-      icon: Download04Icon,
+      icon: Download01Icon,
     },
   ];
 </script>
