@@ -1,5 +1,5 @@
 /**
- * Cornell box scene data.
+ * Cornell box scene data (report Section 1.2, Figure 2).
  *
  * Source: Cornell Program of Computer Graphics, "Cornell Box Data"
  * (https://bowers.cornell.edu/computer-graphics/data), retrieved 2026-11-17.

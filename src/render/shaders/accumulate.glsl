@@ -4,6 +4,9 @@
 //
 //   average_new = (average_old * n + sum_of_new_samples) / (n + k)
 //
+// This running average is the Monte Carlo estimator F_N of report Equation 9: each sample is
+// already divided by its probability density inside the method (Equation 10 for paths).
+//
 // The first sample of an image goes through the pixel centre so a single frame looks
 // sharp; later samples are jittered, which gives antialiasing for free.
 

@@ -1,5 +1,6 @@
 /**
- * The whole radiosity pipeline: patches → form factors → solver. Pure JavaScript, so it runs
+ * The whole radiosity pipeline of report Chapter 4: patches (Section 4.1) → form factors
+ * (Equation 7, Section 4.3) → solver (Equation 6). Pure JavaScript, so it runs
  * both in the Web Worker (worker.js) and in the tests.
  */
 
