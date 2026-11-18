@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  import { LANGUAGES, locale, t } from './i18n/index.js';
   import { createRenderer } from './render/renderer.js';
   import { CORNELL_SCALE, createScene } from './scene/cornell.js';
   import { params, rendererParams, stats, status } from './state/params.js';
@@ -79,8 +80,7 @@
 
 <main class="layout">
   <section class="viewport">
-    <canvas bind:this={canvas} aria-label="Rendered Cornell box. Drag to orbit, scroll to zoom."
-    ></canvas>
+    <canvas bind:this={canvas} aria-label={$t('app.canvas')}></canvas>
     <SplitDivider />
     <RayInspector {renderer} {canvas} />
     <StatusBanner />
@@ -88,8 +88,24 @@
 
   <aside class="panel">
     <header>
-      <h1>Global Illumination Viewer</h1>
-      <p class="hint">The Cornell box rendered with four illumination methods</p>
+      <div class="title">
+        <h1>{$t('app.title')}</h1>
+        <div class="segmented language" role="radiogroup" aria-label={$t('app.language')}>
+          {#each LANGUAGES as language (language)}
+            <button
+              type="button"
+              role="radio"
+              lang={language}
+              aria-checked={$locale === language}
+              class:active={$locale === language}
+              onclick={() => locale.set(language)}
+            >
+              {language.toUpperCase()}
+            </button>
+          {/each}
+        </div>
+      </div>
+      <p class="hint">{$t('app.subtitle')}</p>
     </header>
 
     <ScenePicker />
@@ -99,7 +115,7 @@
     <Toolbar {renderer} />
     <Stats />
 
-    <footer class="hint">Drag to orbit · scroll or pinch to zoom</footer>
+    <footer class="hint">{$t('app.footer')}</footer>
   </aside>
 </main>
 
@@ -137,9 +153,25 @@
     overflow-y: auto;
   }
 
+  .title {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
   h1 {
     margin: 0 0 0.15rem;
     font-size: 1.1rem;
+  }
+
+  .language {
+    flex: none;
+  }
+
+  .language button {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.75rem;
   }
 
   footer {

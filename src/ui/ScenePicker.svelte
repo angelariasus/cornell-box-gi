@@ -1,12 +1,11 @@
 <!-- Scene selector: classic Cornell box (two blocks) or the spheres scene. -->
 <script>
+  import { t } from '../i18n/index.js';
   import { params, SCENES, selectScene } from '../state/params.js';
-
-  const current = $derived(SCENES.find((s) => s.id === $params.scene));
 </script>
 
 <section class="group" aria-labelledby="scene-heading">
-  <h2 id="scene-heading">Scene</h2>
+  <h2 id="scene-heading">{$t('scene.heading')}</h2>
   <div class="segmented" role="radiogroup" aria-labelledby="scene-heading">
     {#each SCENES as scene (scene.id)}
       <button
@@ -16,9 +15,9 @@
         class:active={$params.scene === scene.id}
         onclick={() => selectScene(scene.id)}
       >
-        {scene.name}
+        {$t(`scenes.${scene.id}.name`)}
       </button>
     {/each}
   </div>
-  <p class="hint">{current?.detail}</p>
+  <p class="hint">{$t(`scenes.${$params.scene}.detail`)}</p>
 </section>

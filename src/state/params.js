@@ -48,39 +48,19 @@ export const DEFAULT_PARAMS = Object.freeze({
   debugView: 'albedo',
 });
 
-/** Methods shown in the picker, in the order of the report. */
+/**
+ * Methods shown in the picker, in the order of the report. Names and descriptions live in the
+ * language dictionaries under `methods.<id>` (src/i18n).
+ */
 export const METHODS = Object.freeze([
-  {
-    id: 'phong',
-    name: 'Phong',
-    detail: 'Local model · Chapter 1',
-    available: true,
-  },
-  {
-    id: 'whitted',
-    name: 'Whitted ray tracing',
-    detail: 'Reflection and refraction · Chapter 3',
-    available: true,
-  },
-  {
-    id: 'path',
-    name: 'Path tracing',
-    detail: 'Monte Carlo global illumination · Chapter 5',
-    available: true,
-  },
-  {
-    id: 'radiosity',
-    name: 'Radiosity',
-    detail: 'Diffuse interreflection · Chapter 4',
-    detailSpheres: 'Two-pass with ray tracing · Section 7.1',
-    available: true,
-  },
+  { id: 'phong', available: true },
+  { id: 'whitted', available: true },
+  { id: 'path', available: true },
+  { id: 'radiosity', available: true, hasSpheresDetail: true },
 ]);
 
-export const SCENES = Object.freeze([
-  { id: 'classic', name: 'Classic', detail: 'Two blocks, all diffuse' },
-  { id: 'spheres', name: 'Spheres', detail: 'Mirror and glass spheres' },
-]);
+/** Scenes; names and descriptions are under `scenes.<id>` in the dictionaries. */
+export const SCENES = Object.freeze([{ id: 'classic' }, { id: 'spheres' }]);
 
 export const params = writable({ ...DEFAULT_PARAMS });
 

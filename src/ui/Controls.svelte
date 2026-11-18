@@ -2,18 +2,20 @@
 <script>
   import Slider from './Slider.svelte';
   import Toggle from './Toggle.svelte';
+  import { fmt, t } from '../i18n/index.js';
+  import { METHODS, params } from '../state/params.js';
   import { radiosityState } from '../state/radiosity.js';
   import { causticsState } from '../state/caustics.js';
 
   const showCaustics = $derived(
     $params.scene === 'spheres' && ['whitted', 'path', 'radiosity'].includes($params.mode),
   );
-  const formatPhotons = (v) => `${Math.round(2 ** v / 1000).toLocaleString('en-US')}k`;
+  const formatPhotons = (v) => `${$fmt(Math.round(2 ** v / 1000))}k`;
 
   const SOLVERS = [
-    ['gauss-seidel', 'Gauss-Seidel'],
-    ['jacobi', 'Jacobi'],
-    ['progressive', 'Progressive'],
+    ['gauss-seidel', 'gaussSeidel'],
+    ['jacobi', 'jacobi'],
+    ['progressive', 'progressive'],
   ];
 
   // Shown snapshot: the slider runs over 0..steps-1; -1 in the params means "the last one".
@@ -24,14 +26,13 @@
       : $params.radiosityStep,
   );
   const stepLabel = (index) => {
-    const value = $radiosityState.steps[index] ?? 0;
-    const plural = value === 1 ? '' : 's';
-    const unit = $radiosityState.stepUnit === 'shots' ? `shot${plural}` : `iteration${plural}`;
-    return index === lastStep ? `${value} ${unit} (final)` : `${value} ${unit}`;
+    const n = $radiosityState.steps[index] ?? 0;
+    const unit = $radiosityState.stepUnit === 'shots' ? 'stepShot' : 'stepIteration';
+    const step = $t(`radiosity.${unit}${n === 1 ? '' : 's'}`, { n: $fmt(n) });
+    return index === lastStep ? $t('radiosity.stepFinal', { step }) : step;
   };
-  import { METHODS, params } from '../state/params.js';
 
-  const fixed = (digits) => (v) => Number(v).toFixed(digits);
+  const fixed = (digits) => (v) => $fmt(Number(v), digits);
 
   // The debug view is a separate mode; remember which method to return to.
   let lastMethod = $state('phong');
@@ -53,21 +54,24 @@
 
 {#if $params.mode === 'radiosity'}
   <section class="group" aria-labelledby="radiosity-heading">
-    <h2 id="radiosity-heading">Radiosity settings</h2>
+    <h2 id="radiosity-heading">{$t('radiosity.heading')}</h2>
     <Slider
-      label="Patches per unit"
+      label={$t('radiosity.patches')}
       min={2}
       max={16}
       step={1}
       bind:value={$params.radiosityPatches}
       hint={$radiosityState.stats
-        ? `${$radiosityState.stats.patchCount} patches · ${$radiosityState.stats.patchCount ** 2} form factors`
-        : 'Mesh resolution: each wall is about one unit wide'}
+        ? $t('radiosity.patchesHint', {
+            patches: $fmt($radiosityState.stats.patchCount),
+            formFactors: $fmt($radiosityState.stats.patchCount ** 2),
+          })
+        : $t('radiosity.patchesHintIdle')}
     />
     <div class="field">
-      <span id="solver-label">Solver</span>
+      <span id="solver-label">{$t('radiosity.solver')}</span>
       <div class="segmented" role="radiogroup" aria-labelledby="solver-label">
-        {#each SOLVERS as [value, text] (value)}
+        {#each SOLVERS as [value, key] (value)}
           <button
             type="button"
             role="radio"
@@ -78,14 +82,14 @@
               $params.radiosityStep = -1;
             }}
           >
-            {text}
+            {$t(`radiosity.solvers.${key}`)}
           </button>
         {/each}
       </div>
     </div>
     {#if $params.radiosityMethod !== 'progressive'}
       <Slider
-        label="Iterations"
+        label={$t('radiosity.iterations')}
         min={1}
         max={64}
         step={1}
@@ -96,7 +100,9 @@
     {#if $radiosityState.status === 'solving'}
       <div class="solving" role="status">
         <span>
-          {$radiosityState.phase === 'formFactors' ? 'Computing form factors' : 'Solving'}… {$radiosityState.pct}%
+          {$radiosityState.phase === 'formFactors'
+            ? $t('radiosity.computingFormFactors')
+            : $t('radiosity.solving')}… {$radiosityState.pct}%
         </span>
         <div class="progress"><div class="bar" style:width="{$radiosityState.pct}%"></div></div>
       </div>
@@ -104,48 +110,46 @@
       <p class="error">{$radiosityState.error}</p>
     {:else if $radiosityState.status === 'ready'}
       <Slider
-        label="Shown step"
+        label={$t('radiosity.shownStep')}
         min={0}
         max={lastStep}
         step={1}
         bind:value={() => shownIndex, (v) => ($params.radiosityStep = v === lastStep ? -1 : v)}
         format={stepLabel}
-        hint="Move back to watch the solution converge (Table 2, Figure 13b)"
+        hint={$t('radiosity.shownStepHint')}
       />
       <p class="hint">
-        Form factors {Math.round($radiosityState.stats.formFactorMs)} ms · solve
-        {Math.round($radiosityState.stats.solveMs)} ms
+        {$t('radiosity.timings', {
+          formFactors: $fmt($radiosityState.stats.formFactorMs),
+          solve: $fmt($radiosityState.stats.solveMs),
+        })}
       </p>
     {/if}
 
     <Toggle
-      label="Smooth shading"
+      label={$t('radiosity.smooth')}
       bind:checked={$params.radiosityInterpolate}
-      hint="Off shows each patch flat, revealing the mesh (Section 4.4)"
+      hint={$t('radiosity.smoothHint')}
     />
   </section>
 {/if}
 
 {#if $params.mode === 'path'}
   <section class="group" aria-labelledby="path-heading">
-    <h2 id="path-heading">Path tracing settings</h2>
+    <h2 id="path-heading">{$t('path.heading')}</h2>
     <Slider
-      label="Max bounces"
+      label={$t('path.bounces')}
       min={1}
       max={16}
       step={1}
       bind:value={$params.pathMaxBounces}
-      hint="Surface interactions per path"
+      hint={$t('path.bouncesHint')}
     />
-    <Toggle
-      label="Next event estimation"
-      bind:checked={$params.pathNextEvent}
-      hint="Sample the light at every diffuse bounce"
-    />
+    <Toggle label={$t('path.nee')} bind:checked={$params.pathNextEvent} hint={$t('path.neeHint')} />
     <div class="field">
-      <span id="sampling-label">Direction sampling</span>
+      <span id="sampling-label">{$t('path.sampling')}</span>
       <div class="segmented" role="radiogroup" aria-labelledby="sampling-label">
-        {#each [[true, 'Cosine'], [false, 'Uniform']] as [value, text] (text)}
+        {#each [[true, 'cosine'], [false, 'uniform']] as [value, key] (key)}
           <button
             type="button"
             role="radio"
@@ -153,79 +157,76 @@
             class:active={$params.pathCosineSampling === value}
             onclick={() => ($params.pathCosineSampling = value)}
           >
-            {text}
+            {$t(`path.${key}`)}
           </button>
         {/each}
       </div>
-      <p class="hint">
-        Cosine = importance sampling (Example 4b). The difference is clearest with next event
-        estimation off.
-      </p>
+      <p class="hint">{$t('path.samplingHint')}</p>
     </div>
     <Toggle
-      label="Russian roulette"
+      label={$t('path.roulette')}
       bind:checked={$params.pathRussianRoulette}
-      hint="End weak paths from the 4th bounce"
+      hint={$t('path.rouletteHint')}
     />
     <Slider
-      label="Samples per frame"
+      label={$t('path.samplesPerFrame')}
       min={0}
       max={8}
       step={1}
       bind:value={$params.samplesPerFrame}
-      format={(v) => (Number(v) === 0 ? 'Auto' : String(v))}
-      hint="Auto fills each frame while keeping about 30 fps"
+      format={(v) => (Number(v) === 0 ? $t('path.auto') : String(v))}
+      hint={$t('path.samplesPerFrameHint')}
     />
     <Slider
-      label="Max samples per pixel"
+      label={$t('path.maxSamples')}
       min={4}
       max={14}
       step={1}
       bind:value={() => Math.log2($params.pathMaxSamples), (v) => ($params.pathMaxSamples = 2 ** v)}
-      format={(v) => String(2 ** v)}
+      format={(v) => $fmt(2 ** v)}
     />
   </section>
 {/if}
 
 {#if $params.mode === 'whitted'}
   <section class="group" aria-labelledby="whitted-heading">
-    <h2 id="whitted-heading">Whitted settings</h2>
+    <h2 id="whitted-heading">{$t('whitted.heading')}</h2>
     <Slider
-      label="Max depth"
+      label={$t('whitted.depth')}
       min={0}
       max={6}
       step={1}
       bind:value={$params.whittedDepth}
-      hint="Depth of the ray tree (Figure 8). 0 = primary rays only"
+      hint={$t('whitted.depthHint')}
     />
     <Slider
-      label="Glass index η"
+      label={$t('whitted.ior')}
       min={1}
       max={2}
       step={0.01}
       bind:value={$params.glassIor}
       format={fixed(2)}
-      hint="1.00 = air (no refraction) · 1.50 = glass · 2.00 ≈ diamond"
+      hint={$t('whitted.iorHint')}
     />
     <Toggle
-      label="Ray inspector"
+      label={$t('whitted.inspector')}
       bind:checked={$params.rayInspector}
-      hint="Click a pixel to draw its ray tree (Figure 7)"
+      hint={$t('whitted.inspectorHint')}
     />
   </section>
 {/if}
 
 {#if showCaustics}
   <section class="group" aria-labelledby="caustics-heading">
-    <h2 id="caustics-heading">Caustics (photon map)</h2>
+    <h2 id="caustics-heading">{$t('caustics.heading')}</h2>
     <Toggle
-      label="Photon-mapped caustics"
+      label={$t('caustics.toggle')}
       bind:checked={$params.causticsEnabled}
-      hint="Light through the glass and off the mirror, traced from the lamp (Chapter 6)"
+      hint={$t('caustics.toggleHint')}
     />
     {#if $params.causticsEnabled}
       <Slider
-        label="Photons"
+        label={$t('caustics.photons')}
         min={17}
         max={21}
         step={0.5}
@@ -236,17 +237,17 @@
         format={formatPhotons}
       />
       <Slider
-        label="Search radius r"
+        label={$t('caustics.radius')}
         min={4}
         max={60}
         step={1}
         bind:value={$params.causticsRadius}
-        format={(v) => `${v} units`}
-        hint="Large r: smooth but blurry (bias). Small r: sharp but noisy (Example 5)"
+        format={(v) => $t('caustics.radiusValue', { n: $fmt(v) })}
+        hint={$t('caustics.radiusHint')}
       />
       {#if $causticsState.status === 'tracing'}
         <div class="solving" role="status">
-          <span>Tracing photons… {$causticsState.pct}%</span>
+          <span>{$t('caustics.tracing')}… {$causticsState.pct}%</span>
           <div class="progress">
             <div class="bar" style:width="{$causticsState.pct}%"></div>
           </div>
@@ -255,10 +256,11 @@
         <p class="error">{$causticsState.error}</p>
       {:else if $causticsState.stats}
         <p class="hint">
-          {$causticsState.stats.stored.toLocaleString('en-US')} caustic photons stored of
-          {$causticsState.stats.emitted.toLocaleString('en-US')} · {Math.round(
-            $causticsState.stats.ms,
-          )} ms
+          {$t('caustics.stats', {
+            stored: $fmt($causticsState.stats.stored),
+            emitted: $fmt($causticsState.stats.emitted),
+            ms: $fmt($causticsState.stats.ms),
+          })}
         </p>
       {/if}
     {/if}
@@ -268,19 +270,19 @@
 {#if $params.mode === 'phong' || $params.mode === 'whitted'}
   <section class="group" aria-labelledby="phong-heading">
     <h2 id="phong-heading">
-      {$params.mode === 'whitted' ? 'Local term (Phong)' : 'Phong settings'}
+      {$params.mode === 'whitted' ? $t('phong.localHeading') : $t('phong.heading')}
     </h2>
     <Slider
-      label="Shininess n"
+      label={$t('phong.shininess')}
       min={0}
       max={8}
       step={0.25}
       bind:value={() => Math.log2($params.phongShininess), (v) => ($params.phongShininess = 2 ** v)}
-      format={(v) => (2 ** v).toFixed(0)}
-      hint="Exponent of the specular lobe (R·V)ⁿ"
+      format={(v) => $fmt(2 ** v)}
+      hint={$t('phong.shininessHint')}
     />
     <Slider
-      label="Specular ks"
+      label={$t('phong.specular')}
       min={0}
       max={1}
       step={0.01}
@@ -288,27 +290,27 @@
       format={fixed(2)}
     />
     <Slider
-      label="Ambient La"
+      label={$t('phong.ambient')}
       min={0}
       max={0.3}
       step={0.005}
       bind:value={$params.phongAmbient}
       format={fixed(3)}
-      hint="Constant light that replaces the missing indirect light"
+      hint={$t('phong.ambientHint')}
     />
   </section>
 {/if}
 
 <section class="group" aria-labelledby="compare-heading">
-  <h2 id="compare-heading">Compare</h2>
+  <h2 id="compare-heading">{$t('compare.heading')}</h2>
   <Toggle
-    label="Split screen"
+    label={$t('compare.split')}
     bind:checked={$params.splitView}
-    hint="Show a second method to the right of a draggable divider"
+    hint={$t('compare.splitHint')}
   />
   {#if $params.splitView}
     <div class="field">
-      <span id="split-label">Right side</span>
+      <span id="split-label">{$t('compare.rightSide')}</span>
       <div class="segmented compact" role="radiogroup" aria-labelledby="split-label">
         {#each METHODS.filter((m) => m.available) as method (method.id)}
           <button
@@ -318,32 +320,32 @@
             class:active={$params.splitMode === method.id}
             onclick={() => ($params.splitMode = method.id)}
           >
-            {method.name.replace(' ray tracing', '')}
+            {$t(`methods.${method.id}.short`)}
           </button>
         {/each}
       </div>
-      <p class="hint">Both sides share the camera and the settings above</p>
+      <p class="hint">{$t('compare.shared')}</p>
     </div>
   {/if}
 </section>
 
 <section class="group" aria-labelledby="display-heading">
-  <h2 id="display-heading">Display</h2>
+  <h2 id="display-heading">{$t('display.heading')}</h2>
   <Slider
-    label="Exposure"
+    label={$t('display.exposure')}
     min={-3}
     max={3}
     step={0.1}
     bind:value={() => Math.log2($params.exposure), (v) => ($params.exposure = 2 ** v)}
-    format={(v) => `×${(2 ** v).toFixed(2)}`}
+    format={(v) => `×${$fmt(2 ** v, 2)}`}
   />
   <Toggle
-    label="White balance"
+    label={$t('display.whiteBalance')}
     bind:checked={$params.whiteBalance}
-    hint="Neutralize the orange measured light, like a camera"
+    hint={$t('display.whiteBalanceHint')}
   />
   <Slider
-    label="Resolution scale"
+    label={$t('display.resolution')}
     min={0.25}
     max={1}
     step={0.05}
@@ -353,11 +355,11 @@
 </section>
 
 <details class="advanced">
-  <summary>Advanced</summary>
+  <summary>{$t('advanced.summary')}</summary>
   <div class="group">
-    <h2 id="debug-heading">Geometry debug view</h2>
+    <h2 id="debug-heading">{$t('advanced.debugHeading')}</h2>
     <div class="segmented" role="radiogroup" aria-labelledby="debug-heading">
-      {#each [['off', 'Off'], ['albedo', 'Materials'], ['normals', 'Normals']] as [value, text] (value)}
+      {#each [['off', 'off'], ['albedo', 'materials'], ['normals', 'normals']] as [value, key] (value)}
         <button
           type="button"
           role="radio"
@@ -365,7 +367,7 @@
           class:active={debugChoice === value}
           onclick={() => setDebug(value)}
         >
-          {text}
+          {$t(`advanced.${key}`)}
         </button>
       {/each}
     </div>

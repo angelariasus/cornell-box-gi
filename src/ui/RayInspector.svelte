@@ -6,6 +6,7 @@
 -->
 <script>
   import { buildRayTree, flattenRayTree } from '../math/rayTree.js';
+  import { fmt, surfaceName, t } from '../i18n/index.js';
   import { params } from '../state/params.js';
 
   let { renderer, canvas } = $props();
@@ -111,8 +112,8 @@
     let pb = renderer.projectToCanvas(b);
     if (pa.depth <= NEAR && pb.depth <= NEAR) return null;
     if (pa.depth <= NEAR || pb.depth <= NEAR) {
-      const t = (NEAR - pa.depth) / (pb.depth - pa.depth);
-      const cut = a.map((v, i) => v + (b[i] - v) * t);
+      const fraction = (NEAR - pa.depth) / (pb.depth - pa.depth);
+      const cut = a.map((v, i) => v + (b[i] - v) * fraction);
       const pc = renderer.projectToCanvas(cut.map((v, i) => v + (b[i] - a[i]) * 1e-4));
       if (pa.depth <= NEAR) pa = pc;
       else pb = pc;
@@ -121,17 +122,18 @@
   }
 
   const describe = (node) => {
-    const label = node.kind[0].toUpperCase() + node.kind.slice(1);
+    const label = $t(`inspector.${node.kind}`);
     const digits = node.weight < 0.01 ? 3 : 2;
-    const weight = node.depth > 0 ? ` (w ${node.weight.toFixed(digits)})` : '';
+    const weight = node.depth > 0 ? ` (w ${$fmt(node.weight, digits)})` : '';
     const target = node.hit
-      ? `${node.surface}${node.inside ? ', from inside' : ''}`
-      : 'leaves the box';
+      ? `${surfaceName($t, node.surface)}${node.inside ? $t('inspector.fromInside') : ''}`
+      : $t('inspector.leaves');
     let shadow = '';
     if (node.shadow) {
-      if (node.shadow.facesAway) shadow = ' · faces away from the light';
-      else if (node.shadow.blocked) shadow = ` · shadow ray blocked by ${node.shadow.blocker}`;
-      else shadow = ' · lit (shadow ray reaches the light)';
+      if (node.shadow.facesAway) shadow = ` · ${$t('inspector.facesAway')}`;
+      else if (node.shadow.blocked)
+        shadow = ` · ${$t('inspector.blocked', { blocker: surfaceName($t, node.shadow.blocker) })}`;
+      else shadow = ` · ${$t('inspector.lit')}`;
     }
     return `${label}${weight} → ${target}${shadow}`;
   };
@@ -158,7 +160,7 @@
   </svg>
 
   <div class="legend" role="status">
-    <strong>Ray inspector</strong>
+    <strong>{$t('inspector.title')}</strong>
     {#if tree}
       <ol>
         {#each flattenRayTree(tree) as node, i (i)}
@@ -168,14 +170,14 @@
         {/each}
       </ol>
     {:else}
-      <p>Click a pixel to trace its rays.</p>
+      <p>{$t('inspector.empty')}</p>
     {/if}
     <p class="key">
-      <span style:color={COLORS.primary}>━ primary</span>
-      <span style:color={COLORS.reflected}>━ reflected</span>
-      <span style:color={COLORS.refracted}>━ refracted</span>
-      <span style:color={COLORS.lit}>┅ shadow, lit</span>
-      <span style:color={COLORS.blocked}>┅ shadow, blocked</span>
+      <span style:color={COLORS.primary}>━ {$t('inspector.legendPrimary')}</span>
+      <span style:color={COLORS.reflected}>━ {$t('inspector.legendReflected')}</span>
+      <span style:color={COLORS.refracted}>━ {$t('inspector.legendRefracted')}</span>
+      <span style:color={COLORS.lit}>┅ {$t('inspector.legendLit')}</span>
+      <span style:color={COLORS.blocked}>┅ {$t('inspector.legendBlocked')}</span>
     </p>
   </div>
 {/if}
