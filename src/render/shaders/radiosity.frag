@@ -7,9 +7,8 @@
 //
 //   patch = offset + iv * nu + iu,   iu = floor(s * nu), iv = floor(t * nv)
 //
-// and the radiance seen is L = rho(x) * H / pi. For a uniform patch this is B / pi (report
-// Example 1, step 4), so brightness matches the path tracer; using the reflectance of each
-// pixel keeps patterns finer than a patch (the checker floor) sharp. The light shows Le.
+// and the radiance seen is L = rho * H / pi, which is B / pi (report Example 1, step 4), so
+// brightness matches the path tracer. The light shows Le.
 //
 // Second pass (this shader): rays that hit the mirror or the glass are followed with the
 // Whitted ray stack (reflection, refraction with exact Fresnel) until they reach a diffuse
@@ -88,7 +87,7 @@ vec3 shade(Ray primary) {
       continue;
     }
 
-    vec3 albedo = materialAlbedo(hit.material, hit);
+    vec3 albedo = materialAlbedo(hit.material);
     if (type == MAT_DIFFUSE) {
       if (hit.frontFace && hit.kind == HIT_QUAD) {
         vec3 irradiance = radiosityIrradiance(hit) + causticIrradiance(hit);

@@ -185,19 +185,6 @@ describe('radiosity of the classic Cornell box', () => {
 });
 
 describe('two-pass radiosity support', () => {
-  it('patchAlbedo averages the checker floor and leaves plain materials alone', async () => {
-    const { patchAlbedo } = await import('../src/radiosity/patches.js');
-    const { MATERIALS, MAT } = await import('../src/scene/cornell.js');
-    const checker = MATERIALS[MAT.CHECKER];
-    // One full tile (tiles are 1/8 of the floor) is a single color; two tiles average them.
-    patchAlbedo(checker, 0, 1 / 8, 0, 1 / 8).forEach((c, i) =>
-      expect(c).toBeCloseTo(checker.albedo[i], 10),
-    );
-    const two = patchAlbedo(checker, 0, 2 / 8, 0, 1 / 8);
-    two.forEach((c, i) => expect(c).toBeCloseTo((checker.albedo[i] + checker.albedo2[i]) / 2, 10));
-    expect(patchAlbedo(MATERIALS[MAT.RED], 0, 0.5, 0, 0.5)).toBe(MATERIALS[MAT.RED].albedo);
-  });
-
   it('irradianceFromRadiosity inverts B = E + rho H and gives 0 on the light', async () => {
     const { irradianceFromRadiosity } = await import('../src/radiosity/patches.js');
     const rho = [0.5, 0.5, 0.5, 0, 0, 0];

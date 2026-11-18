@@ -12,7 +12,7 @@ vec3 shade(Ray ray) {
   int type = materialType(hit.material);
   if (type == MAT_EMISSIVE) return hit.frontFace ? lightEmission() : vec3(0.0);
 
-  vec3 albedo = materialAlbedo(hit.material, hit);
+  vec3 albedo = materialAlbedo(hit.material);
   if (type == MAT_MIRROR || type == MAT_GLASS) {
     // A local model cannot reflect or refract: use a dark, very shiny Phong surface.
     return localIllumination(hit, -ray.dir, albedo * 0.15, 0.9, max(uShininess, 128.0));

@@ -70,7 +70,7 @@ vec3 shade(Ray ray) {
       break;
     }
 
-    vec3 albedo = materialAlbedo(hit.material, hit);
+    vec3 albedo = materialAlbedo(hit.material);
 
     if (type == MAT_DIFFUSE) {
       if (uNextEvent) radiance += beta * directLight(hit, albedo);

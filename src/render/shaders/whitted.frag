@@ -48,7 +48,7 @@ vec3 shade(Ray primary) {
       continue;
     }
 
-    vec3 albedo = materialAlbedo(hit.material, hit);
+    vec3 albedo = materialAlbedo(hit.material);
     if (type == MAT_DIFFUSE) {
       color += task.weight * localIllumination(hit, -task.ray.dir, albedo, uSpecular, uShininess);
       // Optional photon-mapped caustic (caustics.glsl): the light that reaches this point
