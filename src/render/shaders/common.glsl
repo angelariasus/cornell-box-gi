@@ -28,6 +28,14 @@ uniform int uQuadCount;
 uniform int uSphereCount;
 uniform int uLightIndex;
 
+// Quad groups (the blocks) with bounding boxes, packed by packScene():
+//   2 x vec4 each: (box min, first quad), (box max, quad count)
+// Quads 0 .. uRoomQuadCount-1 (the room) are always tested; a group's quads are tested only
+// when the ray reaches its box. Disabled with CULL_GROUPS 0 for benchmarking.
+uniform vec4 uGroups[MAX_GROUPS * 2];
+uniform int uRoomQuadCount;
+uniform int uGroupCount;
+
 uniform vec3 uCamPos;
 uniform vec3 uCamForward;
 uniform vec3 uCamRight;
@@ -88,6 +96,30 @@ bool intersectSphere(int i, Ray ray, float tMax, out float t) {
   return t > EPSILON && t < tMax;
 }
 
+// Does the ray reach the axis-aligned box [lo, hi] before tMax? (slab test)
+bool rayHitsBox(Ray ray, vec3 lo, vec3 hi, float tMax) {
+  vec3 inv = 1.0 / ray.dir;
+  vec3 t0 = (lo - ray.origin) * inv;
+  vec3 t1 = (hi - ray.origin) * inv;
+  vec3 tNear = min(t0, t1);
+  vec3 tFar = max(t0, t1);
+  float enter = max(max(tNear.x, tNear.y), max(tNear.z, 0.0));
+  float exit = min(min(tFar.x, tFar.y), min(tFar.z, tMax));
+  return enter <= exit;
+}
+
+// Range of quads [first, end) to test for group g, or an empty range when the ray misses it.
+ivec2 groupRange(int g, Ray ray, float tMax) {
+  vec4 lo = uGroups[g * 2];
+  vec4 hi = uGroups[g * 2 + 1];
+  int first = int(lo.w + 0.5);
+  int end = first + int(hi.w + 0.5);
+#if CULL_GROUPS
+  if (!rayHitsBox(ray, lo.xyz - EPSILON, hi.xyz + EPSILON, tMax)) return ivec2(first, first);
+#endif
+  return ivec2(first, end);
+}
+
 // Closest hit along the ray, with distance below tMax.
 bool intersectScene(Ray ray, float tMax, out Hit hit) {
   hit.kind = HIT_NONE;
@@ -96,12 +128,24 @@ bool intersectScene(Ray ray, float tMax, out Hit hit) {
   vec2 st;
 
   for (int i = 0; i < MAX_QUADS; ++i) {
-    if (i >= uQuadCount) break;
+    if (i >= uRoomQuadCount) break;
     if (intersectQuad(i, ray, hit.t, t, st)) {
       hit.t = t;
       hit.kind = HIT_QUAD;
       hit.index = i;
       hit.st = st;
+    }
+  }
+  for (int g = 0; g < MAX_GROUPS; ++g) {
+    if (g >= uGroupCount) break;
+    ivec2 range = groupRange(g, ray, hit.t);
+    for (int i = range.x; i < range.y; ++i) {
+      if (intersectQuad(i, ray, hit.t, t, st)) {
+        hit.t = t;
+        hit.kind = HIT_QUAD;
+        hit.index = i;
+        hit.st = st;
+      }
     }
   }
   for (int i = 0; i < MAX_SPHERES; ++i) {
@@ -144,8 +188,15 @@ bool occluded(vec3 p, vec3 q) {
   float t;
   vec2 st;
   for (int i = 0; i < MAX_QUADS; ++i) {
-    if (i >= uQuadCount) break;
+    if (i >= uRoomQuadCount) break;
     if (intersectQuad(i, ray, tMax, t, st)) return true;
+  }
+  for (int g = 0; g < MAX_GROUPS; ++g) {
+    if (g >= uGroupCount) break;
+    ivec2 range = groupRange(g, ray, tMax);
+    for (int i = range.x; i < range.y; ++i) {
+      if (intersectQuad(i, ray, tMax, t, st)) return true;
+    }
   }
   for (int i = 0; i < MAX_SPHERES; ++i) {
     if (i >= uSphereCount) break;

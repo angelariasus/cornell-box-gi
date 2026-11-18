@@ -160,3 +160,40 @@ describe('packScene', () => {
     classic.quads.forEach((q, i) => expect(packed.quads[i * 16 + 3]).toBe(q.material));
   });
 });
+
+describe('quad groups (bounding boxes of the blocks)', () => {
+  it('classic: the 9 room quads come first, then one group of 5 quads per block', async () => {
+    const { quadGroups } = await import('../src/scene/cornell.js');
+    const { roomQuadCount, groups } = quadGroups(classic);
+    expect(roomQuadCount).toBe(9);
+    expect(groups.map((g) => [g.name, g.first, g.count])).toEqual([
+      ['short block', 9, 5],
+      ['tall block', 14, 5],
+    ]);
+  });
+
+  it('every corner of a grouped quad lies inside its box', async () => {
+    const { quadGroups } = await import('../src/scene/cornell.js');
+    for (const g of quadGroups(classic).groups) {
+      for (let i = g.first; i < g.first + g.count; i++) {
+        const q = classic.quads[i];
+        for (const c of [
+          q.origin,
+          add(q.origin, q.u),
+          add(q.origin, q.v),
+          add(add(q.origin, q.u), q.v),
+        ]) {
+          c.forEach((x, k) => {
+            expect(x).toBeGreaterThanOrEqual(g.min[k] - 1e-12);
+            expect(x).toBeLessThanOrEqual(g.max[k] + 1e-12);
+          });
+        }
+      }
+    }
+  });
+
+  it('spheres: no groups, every quad is a room quad', async () => {
+    const { quadGroups } = await import('../src/scene/cornell.js');
+    expect(quadGroups(spheres)).toEqual({ roomQuadCount: 9, groups: [] });
+  });
+});

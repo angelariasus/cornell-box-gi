@@ -88,7 +88,17 @@ const DEFINES = {
   MAX_SPHERES: SHADER_LIMITS.MAX_SPHERES,
   MAX_MATERIALS: SHADER_LIMITS.MAX_MATERIALS,
   MAX_SAMPLES_PER_FRAME,
+  MAX_GROUPS: SHADER_LIMITS.MAX_GROUPS,
+  // Bounding boxes of the blocks; `?cull=0` in the URL disables them to measure the gain.
+  CULL_GROUPS: urlFlag('cull', 1),
 };
+
+/** Numeric switch from the page URL (`?name=0|1`), used only to measure optimizations. */
+function urlFlag(name, fallback) {
+  if (typeof location === 'undefined') return fallback;
+  const value = new URLSearchParams(location.search).get(name);
+  return value === null ? fallback : Number(value);
+}
 
 const DEFAULT_PARAMS = {
   exposure: 1.5,
@@ -327,6 +337,9 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
     gl.uniform1i(program.loc('uQuadCount'), packed.quadCount);
     gl.uniform1i(program.loc('uSphereCount'), packed.sphereCount);
     gl.uniform1i(program.loc('uLightIndex'), packed.lightIndex);
+    gl.uniform1i(program.loc('uRoomQuadCount'), packed.roomQuadCount);
+    gl.uniform1i(program.loc('uGroupCount'), packed.groupCount);
+    gl.uniform4fv(program.loc('uGroups'), packed.groups);
   }
 
   /** Method-specific settings. Uniforms a program does not declare are ignored by WebGL. */
