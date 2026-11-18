@@ -34,6 +34,9 @@ import radiosityFrag from './shaders/radiosity.frag?raw';
 const MAX_SAMPLES_PER_FRAME = 8;
 const MAX_DEVICE_PIXEL_RATIO = 2;
 const INTERACTION_SCALE = 0.5;
+const FRAME_BUDGET_MS = 31; // GPU time per frame for adaptive samples: fits two 60 Hz refreshes
+const CALIBRATION_DELAY = 6; // frames after a change before measuring the cost of a sample
+const RECALIBRATION_FRAMES = 90;
 const STATS_INTERVAL_MS = 250;
 
 const LOCAL = { name: 'local.glsl', source: localGlsl };
@@ -63,6 +66,9 @@ const MODES = {
     file: 'pathtracer.frag',
     parts: [],
     maxSamples: null, // set by params.pathMaxSamples
+    // Noisy images gain little from more pixels: render path tracing at CSS resolution on
+    // high-density screens (up to 4x fewer paths per sample on a 200% display).
+    maxDevicePixelRatio: 1,
     toneMapping: 1,
   },
   radiosity: {
@@ -87,7 +93,7 @@ const DEFINES = {
 const DEFAULT_PARAMS = {
   exposure: 1.5,
   resolutionScale: 1,
-  samplesPerFrame: 1,
+  samplesPerFrame: 0, // 0 = adaptive
   debugView: 'albedo',
   phongShininess: 32,
   phongSpecular: 0.1,
@@ -95,7 +101,7 @@ const DEFAULT_PARAMS = {
   whittedDepth: 5,
   glassIor: 1.5,
   pathMaxBounces: 8,
-  pathMaxSamples: 4096,
+  pathMaxSamples: 1024,
   pathNextEvent: true,
   pathCosineSampling: true,
   pathRussianRoulette: true,
@@ -155,6 +161,11 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
   let needsDisplay = true;
   let cssSize = { width: canvas.clientWidth || 1, height: canvas.clientHeight || 1 };
   let frameMs = 0;
+  let autoSamples = 1;
+  let calibrationKey = null;
+  let framesSinceChange = 0; // rendered frames since the method, scene, size or settings changed
+  let framesSinceCalibration = 0;
+  const syncPixel = new Float32Array(4);
   let lastFrameTime = 0;
   let lastStatsTime = 0;
 
@@ -269,7 +280,8 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
   resizeObserver.observe(canvas);
 
   function renderSize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, MAX_DEVICE_PIXEL_RATIO);
+    const maxDpr = MODES[mode].maxDevicePixelRatio ?? MAX_DEVICE_PIXEL_RATIO;
+    const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
     const interaction = camera.interacting ? INTERACTION_SCALE : 1;
     const factor = dpr * params.resolutionScale * interaction;
     return {
@@ -358,11 +370,71 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
     gl.uniform1f(program.loc('uAspect'), aspect);
   }
 
-  function methodPass(limit = maxSamples()) {
+  /** Waiting for the GPU needs a pixel read, which is only portable from float32 buffers. */
+  function canSyncGpu() {
+    return context.format.type === context.gl.FLOAT;
+  }
+
+  /** Blocks until the GPU has finished the queued work (reads back one pixel). */
+  function syncGpu() {
+    if (!canSyncGpu()) return;
+    const { gl } = context;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, targets[0].framebuffer);
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.FLOAT, syncPixel);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+
+  /** Samples traced in the next pass: the user's setting, or the adaptive value when it is 0. */
+  function samplesThisFrame() {
+    if (params.samplesPerFrame > 0) return params.samplesPerFrame;
+    return camera.interacting ? 1 : autoSamples;
+  }
+
+  /**
+   * Adaptive samples per frame. Tracing one sample per frame leaves a fast GPU idle while it
+   * waits for the next screen refresh (16.7 ms at 60 Hz). Frame times can only be whole
+   * refresh periods, so guessing from frame intervals gets stuck (2 samples of 9 ms take two
+   * refreshes, the same throughput as 1). Instead, whenever the method, scene, resolution or
+   * settings change, the GPU time of one sample is measured directly (two synchronized passes)
+   * and the count is chosen to fill two refresh periods: k = floor(31 ms / cost), 1 ≤ k ≤ 8.
+   * The measurement waits a few frames after a change, because an idle integrated GPU runs at a
+   * low clock speed for its first frames, and is repeated now and then.
+   */
+  function calibrateSamples() {
+    const key = JSON.stringify([mode, scene?.id, targets[0].width, targets[0].height, params]);
+    if (key !== calibrationKey) {
+      calibrationKey = key;
+      autoSamples = 1;
+      framesSinceChange = 0;
+    }
+    framesSinceChange += 1;
+    framesSinceCalibration += 1;
+    // Measure on the 6th frame after a change, when an integrated GPU has left its idle clock
+    // speed, and again every 90 frames in case conditions change (other tabs, power saving).
+    if (framesSinceChange !== CALIBRATION_DELAY && framesSinceCalibration < RECALIBRATION_FRAMES)
+      return;
+    framesSinceCalibration = 0;
+    if (!canSyncGpu()) return; // keep 1 sample per frame on devices without float buffers
+    // Warm-up pass: the first draw after a change can include the driver finishing the
+    // shader compilation, which would make the sample look several times more expensive.
+    methodPass(maxSamples(), 1);
+    syncGpu();
+    const start = performance.now();
+    methodPass(maxSamples(), 1);
+    methodPass(maxSamples(), 1);
+    syncGpu();
+    const msPerSample = (performance.now() - start) / 2;
+    autoSamples = Math.max(
+      1,
+      Math.min(MAX_SAMPLES_PER_FRAME, Math.floor(FRAME_BUDGET_MS / msPerSample)),
+    );
+  }
+
+  function methodPass(limit = maxSamples(), perPass = samplesThisFrame()) {
     const { gl } = context;
     const [read, write] = targets;
     const program = programs[mode].use();
-    const k = Math.min(params.samplesPerFrame, limit - sampleCount, MAX_SAMPLES_PER_FRAME);
+    const k = Math.min(perPass, limit - sampleCount, MAX_SAMPLES_PER_FRAME);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, write.framebuffer);
     gl.viewport(0, 0, write.width, write.height);
@@ -407,11 +479,16 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
     if (!packed || !targets[0]) return;
 
     const rendering = sampleCount < maxSamples();
+    let perFrame = 0;
     if (rendering) {
-      methodPass();
+      if (lastFrameTime) {
+        const interval = now - lastFrameTime;
+        frameMs = frameMs ? frameMs * 0.9 + interval * 0.1 : interval;
+      }
+      if (params.samplesPerFrame === 0 && !camera.interacting) calibrateSamples();
+      perFrame = samplesThisFrame();
+      if (sampleCount < maxSamples()) methodPass(); // calibration may have finished the image
       needsDisplay = true;
-      if (lastFrameTime)
-        frameMs = frameMs ? frameMs * 0.9 + (now - lastFrameTime) * 0.1 : now - lastFrameTime;
       lastFrameTime = now;
     } else {
       lastFrameTime = 0;
@@ -430,6 +507,8 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
         width: targets[0].width,
         height: targets[0].height,
         frameMs: rendering ? frameMs : 0,
+        samplesPerFrame: perFrame,
+        autoSamples: params.samplesPerFrame === 0,
         format: context.format.label,
       });
     }
@@ -541,22 +620,16 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
      */
     benchmark(passes = 10) {
       if (!ready || !packed || !targets[0]) return null;
-      const { gl } = context;
-      const pixel = new Float32Array(4);
-      const sync = () => {
-        gl.bindFramebuffer(gl.FRAMEBUFFER, targets[0].framebuffer);
-        gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.FLOAT, pixel);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-      };
+      if (!canSyncGpu()) return null;
       sampleCount = 0;
-      methodPass();
-      sync(); // warm-up pass, also flushes earlier work
+      methodPass(maxSamples(), 1);
+      syncGpu(); // warm-up pass, also flushes earlier work
       const start = performance.now();
       for (let i = 0; i < passes; i++) {
         sampleCount = 1; // keep the shader on its normal path without hitting maxSamples
-        methodPass();
+        methodPass(maxSamples(), 1);
       }
-      sync();
+      syncGpu();
       const msPerPass = (performance.now() - start) / passes;
       resetAccumulation();
       return {
@@ -564,7 +637,7 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
         msPerPass,
         width: targets[0].width,
         height: targets[0].height,
-        samplesPerPass: params.samplesPerFrame,
+        samplesPerPass: 1,
       };
     },
 
@@ -575,16 +648,12 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
      */
     async accumulate(samples) {
       if (!ready || !packed || !targets[0]) return null;
-      const { gl } = context;
-      const pixel = new Float32Array(4);
       const start = performance.now();
       while (sampleCount < samples) {
-        methodPass(samples);
+        methodPass(samples, params.samplesPerFrame || MAX_SAMPLES_PER_FRAME);
         needsDisplay = true;
         if (frameIndex % 4 === 0) {
-          gl.bindFramebuffer(gl.FRAMEBUFFER, targets[0].framebuffer);
-          gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.FLOAT, pixel); // wait for the GPU
-          gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+          syncGpu(); // wait for the GPU before queueing more work
           await new Promise((resolve) => setTimeout(resolve, 0));
           if (!ready) return null;
         }

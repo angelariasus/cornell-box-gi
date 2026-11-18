@@ -134,11 +134,24 @@ bool intersectScene(Ray ray, out Hit hit) {
 }
 
 // Is anything between points p and q? (shadow rays, visibility)
+// A shadow ray only needs to know whether something is in the way, not what is closest, so
+// it stops at the first blocker instead of searching the whole scene for the nearest hit.
 bool occluded(vec3 p, vec3 q) {
   vec3 toQ = q - p;
   float dist = length(toQ);
-  Hit hit;
-  return intersectScene(Ray(p, toQ / dist), dist - EPSILON, hit);
+  Ray ray = Ray(p, toQ / dist);
+  float tMax = dist - EPSILON;
+  float t;
+  vec2 st;
+  for (int i = 0; i < MAX_QUADS; ++i) {
+    if (i >= uQuadCount) break;
+    if (intersectQuad(i, ray, tMax, t, st)) return true;
+  }
+  for (int i = 0; i < MAX_SPHERES; ++i) {
+    if (i >= uSphereCount) break;
+    if (intersectSphere(i, ray, tMax, t)) return true;
+  }
+  return false;
 }
 
 // Moves a ray origin off the surface along the normal, against self-intersection ("acne").

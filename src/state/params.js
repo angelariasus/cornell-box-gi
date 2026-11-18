@@ -15,7 +15,7 @@ export const DEFAULT_PARAMS = Object.freeze({
   exposure: 1.5,
   whiteBalance: true,
   resolutionScale: 1,
-  samplesPerFrame: 1,
+  samplesPerFrame: 0, // 0 = adaptive (fills each frame up to ~30 fps)
   // Phong
   phongShininess: 32,
   phongSpecular: 0.1,
@@ -25,7 +25,7 @@ export const DEFAULT_PARAMS = Object.freeze({
   glassIor: 1.5,
   // Path tracing
   pathMaxBounces: 8,
-  pathMaxSamples: 4096,
+  pathMaxSamples: 1024,
   pathNextEvent: true,
   pathCosineSampling: true,
   pathRussianRoulette: true,
