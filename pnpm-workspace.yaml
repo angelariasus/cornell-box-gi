@@ -1,0 +1,3 @@
+# Install scripts that are explicitly not run. @hugeicons/svelte only prints a thank-you message.
+allowBuilds:
+  '@hugeicons/svelte': false

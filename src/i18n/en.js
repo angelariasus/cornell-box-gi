@@ -3,10 +3,10 @@ export default {
   app: {
     documentTitle: 'Global Illumination Viewer · Cornell Box',
     title: 'Global Illumination Viewer',
-    subtitle: 'The Cornell box rendered with four illumination methods',
+    subtitle: 'Four illumination methods on the Cornell box',
     canvas: 'Rendered Cornell box. Drag to orbit, scroll to zoom.',
-    footer: 'Drag to orbit · scroll or pinch to zoom',
     language: 'Language',
+    moreInfo: 'More information',
   },
   scene: { heading: 'Scene' },
   scenes: {
@@ -72,7 +72,9 @@ export default {
     samplesPerFrame: 'Samples per frame',
     auto: 'Auto',
     samplesPerFrameHint: 'Auto fills each frame while keeping about 30 fps',
-    maxSamples: 'Max samples per pixel',
+    quality: 'Samples per pixel',
+    qualityInfo:
+      'Accumulation stops here. Each step quadruples the samples and halves the noise (1/√N); raising it keeps the samples already accumulated.',
   },
   whitted: {
     heading: 'Whitted settings',
@@ -110,6 +112,7 @@ export default {
     rightSide: 'Right side',
     shared: 'Both sides share the camera and the settings above',
     divider: 'Split screen divider',
+    pathQuality: 'Path tracing samples per pixel',
   },
   display: {
     heading: 'Display',
@@ -125,11 +128,14 @@ export default {
     materials: 'Materials',
     normals: 'Normals',
   },
-  toolbar: { officialCamera: 'Official camera', restart: 'Restart', savePng: 'Save PNG' },
+  toolbar: {
+    label: 'View',
+    officialCamera: 'Official camera',
+    restart: 'Restart',
+    savePng: 'Save PNG',
+  },
   stats: {
     heading: 'Statistics',
-    presets: 'Path tracing samples per pixel',
-    presetsHint: 'Each step halves the noise (1/√N); raising it keeps the current samples',
     progress: 'Accumulated samples',
     samples: 'Samples per pixel',
     rightSide: 'Right side',

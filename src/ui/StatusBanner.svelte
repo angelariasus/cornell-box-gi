@@ -1,6 +1,8 @@
-<!-- Status shown over the canvas: compilation, radiosity progress, errors and compatibility
+<!-- Status shown at the top of the canvas: compilation, radiosity progress, errors and compatibility
      warnings. -->
 <script>
+  import { HugeiconsIcon } from '@hugeicons/svelte';
+  import { Cancel01Icon } from '@hugeicons/core-free-icons';
   import { t } from '../i18n/index.js';
   import { params, status } from '../state/params.js';
   import { radiosityState } from '../state/radiosity.js';
@@ -46,7 +48,10 @@
 </script>
 
 {#if message}
-  <div class="banner {message.kind}" role={message.kind === 'error' ? 'alert' : 'status'}>
+  <div
+    class="banner overlay-card {message.kind}"
+    role={message.kind === 'error' ? 'alert' : 'status'}
+  >
     {#if message.code}
       <pre>{message.text}</pre>
     {:else}
@@ -56,7 +61,8 @@
       <button
         type="button"
         aria-label={$t('status.dismiss')}
-        onclick={() => (dismissedWarning = true)}>×</button
+        onclick={() => (dismissedWarning = true)}
+        ><HugeiconsIcon icon={Cancel01Icon} size={16} /></button
       >
     {/if}
   </div>
@@ -65,18 +71,20 @@
 <style>
   .banner {
     position: absolute;
-    inset: auto 1rem 1rem 1rem;
+    top: 0.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: min(36rem, calc(100% - 16rem));
     display: flex;
     gap: 0.75rem;
     align-items: flex-start;
     padding: 0.6rem 0.8rem;
-    border-radius: var(--radius);
-    background: rgb(0 0 0 / 0.78);
     font-size: 0.88rem;
   }
 
   .banner.warning {
-    color: var(--accent);
+    color: var(--warning);
   }
 
   .banner.error {
@@ -96,10 +104,11 @@
   }
 
   button {
+    display: grid;
+    padding: 0;
     border: none;
     background: none;
+    color: inherit;
     cursor: pointer;
-    font-size: 1.1rem;
-    line-height: 1;
   }
 </style>

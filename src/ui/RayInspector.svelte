@@ -159,7 +159,7 @@
     {/each}
   </svg>
 
-  <div class="legend" role="status">
+  <div class="legend overlay-card" role="status">
     <strong>{$t('inspector.title')}</strong>
     {#if tree}
       <ol>
@@ -198,10 +198,8 @@
     max-width: min(30rem, calc(100% - 1.5rem));
     max-height: 45%;
     overflow: auto;
-    padding: 0.55rem 0.75rem;
-    border-radius: var(--radius);
-    background: rgb(0 0 0 / 0.72);
-    font-size: 0.78rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
     pointer-events: auto;
   }
 

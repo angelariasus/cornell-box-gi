@@ -3,6 +3,8 @@
   side. Moving it only changes the display pass, so neither image loses its samples.
 -->
 <script>
+  import { HugeiconsIcon } from '@hugeicons/svelte';
+  import { ArrowLeftRightIcon } from '@hugeicons/core-free-icons';
   import { t } from '../i18n/index.js';
   import { params } from '../state/params.js';
 
@@ -47,10 +49,10 @@
 
 {#if $params.splitView}
   <div class="split" bind:this={container}>
-    <span class="label left" style:right="{(1 - $params.splitPosition) * 100}%">
+    <span class="label overlay-card left" style:right="{(1 - $params.splitPosition) * 100}%">
       {nameOf($params.mode)}
     </span>
-    <span class="label right" style:left="{$params.splitPosition * 100}%">
+    <span class="label overlay-card right" style:left="{$params.splitPosition * 100}%">
       {nameOf($params.splitMode)}
     </span>
     <div
@@ -69,7 +71,8 @@
       onpointercancel={onPointerUp}
       onkeydown={onKeyDown}
     >
-      <span class="grip">⇆</span>
+      <span class="grip"><HugeiconsIcon icon={ArrowLeftRightIcon} size={14} strokeWidth={2} /></span
+      >
     </div>
   </div>
 {/if}
@@ -83,11 +86,9 @@
 
   .label {
     position: absolute;
-    bottom: 3.6rem;
+    bottom: 4.6rem; /* above the progress card */
     padding: 0.2rem 0.55rem;
     margin: 0 0.6rem;
-    border-radius: var(--radius);
-    background: rgb(0 0 0 / 0.65);
     font-size: 0.78rem;
     white-space: nowrap;
   }
@@ -106,12 +107,11 @@
   }
 
   .grip {
-    padding: 0.25rem 0.3rem;
+    display: grid;
+    padding: 0.3rem;
     border-radius: 999px;
     background: #fff;
     color: #111;
-    font-size: 0.8rem;
-    line-height: 1;
     box-shadow: 0 1px 4px rgb(0 0 0 / 0.5);
   }
 

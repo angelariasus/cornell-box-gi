@@ -1,29 +1,49 @@
-<!-- Labelled on/off switch with an optional hint. -->
+<!--
+  Labelled on/off switch. `hint` is shown under the label; `info` is a longer explanation behind
+  an ⓘ button.
+-->
 <script>
-  let { label, checked = $bindable(), hint = '' } = $props();
+  import Info from './Info.svelte';
+
+  let { label, checked = $bindable(), hint = '', info = '' } = $props();
+
+  const id = `toggle-${Math.random().toString(36).slice(2, 9)}`;
 </script>
 
-<label class="toggle">
+<div class="toggle">
   <span class="text">
-    <span>{label}</span>
+    <span class="label">
+      <label for={id}>{label}</label>
+      {#if info}<Info text={info} />{/if}
+    </span>
     {#if hint}<span class="hint">{hint}</span>{/if}
   </span>
-  <input type="checkbox" role="switch" bind:checked />
-</label>
+  <input {id} type="checkbox" role="switch" bind:checked />
+</div>
 
 <style>
   .toggle {
+    position: relative;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 0.75rem;
     font-size: 0.85rem;
+  }
+
+  label {
     cursor: pointer;
   }
 
   .text {
     display: flex;
     flex-direction: column;
+  }
+
+  .label {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
   }
 
   input {

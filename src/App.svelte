@@ -7,13 +7,14 @@
   import { createCausticsController } from './state/caustics.js';
   import { createRadiosityController } from './state/radiosity.js';
   import Controls from './ui/Controls.svelte';
+  import Hud from './ui/Hud.svelte';
   import MethodPicker from './ui/MethodPicker.svelte';
   import RayInspector from './ui/RayInspector.svelte';
   import ScenePicker from './ui/ScenePicker.svelte';
   import SplitDivider from './ui/SplitDivider.svelte';
   import Stats from './ui/Stats.svelte';
   import StatusBanner from './ui/StatusBanner.svelte';
-  import Toolbar from './ui/Toolbar.svelte';
+  import ViewActions from './ui/ViewActions.svelte';
 
   let canvas = $state();
   let renderer = $state(null);
@@ -82,6 +83,8 @@
     <canvas bind:this={canvas} aria-label={$t('app.canvas')}></canvas>
     <SplitDivider />
     <RayInspector {renderer} {canvas} />
+    <Hud />
+    <ViewActions {renderer} />
     <StatusBanner />
   </section>
 
@@ -107,20 +110,21 @@
       <p class="hint">{$t('app.subtitle')}</p>
     </header>
 
-    <ScenePicker />
-    <MethodPicker />
-    <Controls />
-    <Toolbar {renderer} />
-    <Stats />
-
-    <footer class="hint">{$t('app.footer')}</footer>
+    <div class="settings">
+      <div class="pickers">
+        <ScenePicker />
+        <MethodPicker />
+      </div>
+      <Controls />
+      <Stats />
+    </div>
   </aside>
 </main>
 
 <style>
   .layout {
     display: grid;
-    grid-template-columns: 1fr 340px;
+    grid-template-columns: 1fr 360px;
     height: 100vh;
   }
 
@@ -128,6 +132,7 @@
     position: relative;
     background: #000;
     min-height: 0;
+    overflow: hidden;
   }
 
   canvas {
@@ -141,26 +146,38 @@
     cursor: grabbing;
   }
 
+  /* Fixed header; only the settings scroll. */
   .panel {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
-    padding: 1.25rem;
+    min-height: 0;
     border-left: 1px solid var(--border);
     background: var(--panel);
-    overflow-y: auto;
+  }
+
+  header {
+    padding: 0.9rem 1.25rem 0.8rem;
+    border-bottom: 1px solid var(--border);
   }
 
   .title {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
   }
 
   h1 {
-    margin: 0 0 0.15rem;
-    font-size: 1.1rem;
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  header .hint {
+    margin-top: 0.15rem;
   }
 
   .language {
@@ -168,12 +185,23 @@
   }
 
   .language button {
-    padding: 0.2rem 0.5rem;
-    font-size: 0.75rem;
+    padding: 0.15rem 0.45rem;
+    font-size: 0.72rem;
   }
 
-  footer {
-    margin-top: auto;
+  .settings {
+    flex: 1;
+    min-height: 0;
+    padding: 0 1.25rem 1rem;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+  }
+
+  .pickers {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    padding: 0.9rem 0 1rem;
   }
 
   /* Narrow screens: the panel moves below the canvas. */
@@ -187,6 +215,10 @@
     .panel {
       border-left: none;
       border-top: 1px solid var(--border);
+    }
+
+    .settings {
+      overflow: visible;
     }
   }
 </style>
