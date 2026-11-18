@@ -47,6 +47,31 @@ export function primaryRayDirection(frame, uv, fovYDegrees, aspect) {
   return normalize(add(add(frame.forward, scale(frame.right, x)), scale(frame.up, y)));
 }
 
+/**
+ * tan(fovY / 2) actually used for an image of the given aspect ratio. The official view is
+ * square; on portrait screens the horizontal field of view is kept instead, so the whole box
+ * stays visible. Shared by the shader uniforms, the ray inspector and the projection below.
+ */
+export function viewTanHalfFov(fovYDegrees, aspect) {
+  return Math.tan((fovYDegrees * Math.PI) / 360) / Math.min(aspect, 1);
+}
+
+/**
+ * Projects a world point to normalized image coordinates (x, y in [-1, 1], y up). `depth` is
+ * the distance along the view direction; points with depth ≤ 0 are behind the camera.
+ */
+export function projectPoint(frame, tanHalfFov, aspect, point) {
+  const p = [
+    point[0] - frame.position[0],
+    point[1] - frame.position[1],
+    point[2] - frame.position[2],
+  ];
+  const depth = p[0] * frame.forward[0] + p[1] * frame.forward[1] + p[2] * frame.forward[2];
+  const x = p[0] * frame.right[0] + p[1] * frame.right[1] + p[2] * frame.right[2];
+  const y = p[0] * frame.up[0] + p[1] * frame.up[1] + p[2] * frame.up[2];
+  return { x: x / (depth * aspect * tanHalfFov), y: y / (depth * tanHalfFov), depth };
+}
+
 export class OrbitCamera {
   /**
    * @param {HTMLElement} element  element that receives the pointer events
