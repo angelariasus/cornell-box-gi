@@ -34,49 +34,6 @@ export default {
     },
     debug: { name: 'Debug view', short: 'Debug', detail: 'Geometry check' },
   },
-  info: {
-    try: 'Try:',
-    phong: {
-      title: 'Local illumination',
-      text: 'Each point sees only the light, through one shadow ray. No light bounces between surfaces: the ceiling stays dark, shadows are hard and there is no color bleeding.',
-      source: 'Report: Example 1',
-      tipClassic: 'Switch to Path tracing and watch the ceiling and the block sides light up.',
-      tipSpheres: 'The mirror and the glass reflect nothing: a local model cannot follow rays.',
-    },
-    whitted: {
-      title: 'Whitted ray tracing',
-      text: 'Rays follow exact mirror reflection and refraction (Equation 4, Figure 8). Diffuse surfaces still use the local model, so it only captures LDS*E | LS*E paths.',
-      source: 'Report: Example 2',
-      tipClassic: 'With only diffuse walls it looks exactly like Phong: no indirect light.',
-      tipSpheres:
-        'Lower Max depth to 0 and 1, or set the glass index to 1.00. Photon-mapped caustics add the light Whitted misses.',
-    },
-    path: {
-      title: 'Path tracing',
-      text: 'One random path per sample solves the rendering equation by Monte Carlo (Equation 10, Figure 14). It captures every path L(D|S)*E; the noise fades as 1/√N.',
-      source: 'Report: Example 4',
-      tipClassic:
-        'Turn next event estimation off, then switch to uniform sampling: same image, more noise.',
-      tipSpheres:
-        'Look under the glass sphere: the caustic (LSDE) converges slowly. Then turn photon-mapped caustics on.',
-    },
-    radiosity: {
-      title: 'Radiosity',
-      text: 'An energy balance between diffuse patches (Equation 6) solved as a linear system. The solution does not depend on the camera, but it only models LD*E paths.',
-      source: 'Report: Example 3',
-      tipClassic:
-        'Orbit the camera (nothing is recomputed), move Shown step, or turn smooth shading off.',
-      tipSpheres:
-        'Two-pass: radiosity for the walls, ray tracing through the spheres. No caustic under the glass until you turn the photon map on.',
-    },
-    debug: {
-      title: 'Geometry debug view',
-      text: 'Material colors or surface normals, without lighting. Used to check the Cornell box data.',
-      source: 'Cornell Box Data (bowers.cornell.edu)',
-      tipClassic: '',
-      tipSpheres: '',
-    },
-  },
   radiosity: {
     heading: 'Radiosity settings',
     patches: 'Patches per unit',
