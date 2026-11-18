@@ -263,13 +263,67 @@ export function createScene(id) {
 // ---------------------------------------------------------------------------
 
 /** Array sizes declared in the shaders. Keep in sync with `common.glsl`. */
-export const SHADER_LIMITS = Object.freeze({ MAX_QUADS: 24, MAX_SPHERES: 4, MAX_MATERIALS: 8 });
+export const SHADER_LIMITS = Object.freeze({
+  MAX_QUADS: 24,
+  MAX_SPHERES: 4,
+  MAX_MATERIALS: 8,
+  MAX_GROUPS: 4,
+});
+
+/**
+ * Groups of quads that form one object (the blocks), with their axis-aligned bounding box.
+ * A ray that misses the box cannot hit any of its quads, so the shaders skip all of them.
+ * The room quads come first and are always tested; the quads of a group are consecutive.
+ */
+export function quadGroups(scene) {
+  const groups = [];
+  scene.quads.forEach((q, index) => {
+    const name = q.label.match(/^(.*block)/)?.[1];
+    if (!name) return;
+    let group = groups.find((g) => g.name === name);
+    if (!group) {
+      group = {
+        name,
+        first: index,
+        count: 0,
+        min: [Infinity, Infinity, Infinity],
+        max: [-Infinity, -Infinity, -Infinity],
+      };
+      groups.push(group);
+    }
+    if (index !== group.first + group.count)
+      throw new Error(`Quads of ${name} are not consecutive`);
+    group.count += 1;
+    const corners = [
+      q.origin,
+      add(q.origin, q.u),
+      add(q.origin, q.v),
+      add(add(q.origin, q.u), q.v),
+    ];
+    for (const c of corners) {
+      for (let k = 0; k < 3; k++) {
+        group.min[k] = Math.min(group.min[k], c[k]);
+        group.max[k] = Math.max(group.max[k], c[k]);
+      }
+    }
+  });
+  const roomQuadCount = groups.length ? groups[0].first : scene.quads.length;
+  groups.forEach((g, i) => {
+    const expected = i === 0 ? roomQuadCount : groups[i - 1].first + groups[i - 1].count;
+    if (g.first !== expected) throw new Error('Grouped quads must follow the room quads');
+  });
+  if (groups.length && groups.at(-1).first + groups.at(-1).count !== scene.quads.length) {
+    throw new Error('Grouped quads must be the last quads of the scene');
+  }
+  return { roomQuadCount, groups };
+}
 
 /**
  * Flattens a scene into vec4-aligned Float32Arrays for `uniform vec4` arrays:
  * - quads, 4 × vec4 each: (origin, material), (u, 0), (v, 0), (normal, 0)
  * - spheres, 2 × vec4 each: (center, radius), (material, 0, 0, 0)
  * - materials, 3 × vec4 each: (albedo, type), (emission, ior), (albedo2, checkerTiles)
+ * - groups, 2 × vec4 each: (box min, first quad), (box max, quad count)
  */
 export function packScene(scene) {
   const { MAX_QUADS, MAX_SPHERES, MAX_MATERIALS } = SHADER_LIMITS;
@@ -302,8 +356,17 @@ export function packScene(scene) {
     );
   });
 
+  const { roomQuadCount, groups: groupList } = quadGroups(scene);
+  if (groupList.length > SHADER_LIMITS.MAX_GROUPS)
+    throw new Error('Too many groups for the shader');
+  const groups = new Float32Array(Math.max(1, groupList.length) * 8);
+  groupList.forEach((g, i) => groups.set([...g.min, g.first, ...g.max, g.count], i * 8));
+
   return {
     quadCount: scene.quads.length,
+    roomQuadCount,
+    groupCount: groupList.length,
+    groups,
     sphereCount: scene.spheres.length,
     materialCount: scene.materials.length,
     lightIndex: scene.light.quadIndex,
