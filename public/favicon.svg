@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#151517"/>
+  <polygon points="12,12 52,12 41,20 23,20" fill="#5d5d63"/><!-- ceiling -->
+  <polygon points="12,52 23,40 41,40 52,52" fill="#c9c9cc"/><!-- floor -->
+  <polygon points="23,20 41,20 41,40 23,40" fill="#e4e4e6"/><!-- back wall -->
+  <polygon points="12,12 23,20 23,40 12,52" fill="#c0392b"/><!-- left wall -->
+  <polygon points="52,12 41,20 41,40 52,52" fill="#3c9a35"/><!-- right wall -->
+  <polygon points="27,14.5 37,14.5 36,17.5 28,17.5" fill="#ffffff"/><!-- light -->
+</svg>

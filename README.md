@@ -189,6 +189,7 @@ src/
 ├─ render/            WebGL2 renderer, camera and GLSL shaders
 ├─ radiosity/         patches, form factors, solvers, worker
 └─ photons/           caustic photon tracing, worker
+public/               site icon, web app manifest and link preview image
 tests/                Vitest suites
 docs/                 manual, captures
 ```
