@@ -3,6 +3,8 @@
   side. Moving it only changes the display pass, so neither image loses its samples.
 -->
 <script>
+  import { HugeiconsIcon } from '@hugeicons/svelte';
+  import { ArrowLeftRightIcon } from '@hugeicons/core-free-icons';
   import { t } from '../i18n/index.js';
   import { params } from '../state/params.js';
 
@@ -69,7 +71,8 @@
       onpointercancel={onPointerUp}
       onkeydown={onKeyDown}
     >
-      <span class="grip">⇆</span>
+      <span class="grip"><HugeiconsIcon icon={ArrowLeftRightIcon} size={14} strokeWidth={2} /></span
+      >
     </div>
   </div>
 {/if}
@@ -106,12 +109,11 @@
   }
 
   .grip {
-    padding: 0.25rem 0.3rem;
+    display: grid;
+    padding: 0.3rem;
     border-radius: 999px;
     background: #fff;
     color: #111;
-    font-size: 0.8rem;
-    line-height: 1;
     box-shadow: 0 1px 4px rgb(0 0 0 / 0.5);
   }
 

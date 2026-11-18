@@ -3,6 +3,8 @@
   nearest positioned ancestor (the control's label row), across the full width of the panel.
 -->
 <script>
+  import { HugeiconsIcon } from '@hugeicons/svelte';
+  import { InformationCircleIcon } from '@hugeicons/core-free-icons';
   import { t } from '../i18n/index.js';
 
   let { text } = $props();
@@ -43,10 +45,7 @@
     if (event.key === 'Escape') ((pinned = false), (focused = false), event.currentTarget.blur());
   }}
 >
-  <svg viewBox="0 0 16 16" aria-hidden="true">
-    <circle cx="8" cy="8" r="6.5" />
-    <path d="M8 7.2v4M8 4.6v.1" />
-  </svg>
+  <HugeiconsIcon icon={InformationCircleIcon} size={15} strokeWidth={1.6} aria-hidden="true" />
 </button>
 <span {id} role="tooltip" class="tip" class:open>{text}</span>
 
@@ -74,15 +73,6 @@
   .info:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 1px;
-  }
-
-  svg {
-    width: 0.95rem;
-    height: 0.95rem;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.4;
-    stroke-linecap: round;
   }
 
   .tip {

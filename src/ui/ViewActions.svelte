@@ -1,5 +1,7 @@
 <!-- Floating buttons over the canvas: official camera, restart accumulation and PNG capture. -->
 <script>
+  import { HugeiconsIcon } from '@hugeicons/svelte';
+  import { Camera01Icon, Download04Icon, RefreshIcon } from '@hugeicons/core-free-icons';
   import { t } from '../i18n/index.js';
   import { params, stats } from '../state/params.js';
 
@@ -20,20 +22,17 @@
     {
       key: 'officialCamera',
       run: () => renderer?.resetCamera(),
-      // Camera body and lens.
-      icon: 'M2.5 5.5h2.2l1.2-1.8h4.2l1.2 1.8h2.2v7h-11zM8 7a2 2 0 1 0 0 4a2 2 0 0 0 0-4z',
+      icon: Camera01Icon,
     },
     {
       key: 'restart',
       run: () => renderer?.restart(),
-      // Circular arrow.
-      icon: 'M12.6 6.2A5 5 0 1 0 13 9.5M12.8 2.8v3.6H9.2',
+      icon: RefreshIcon,
     },
     {
       key: 'savePng',
       run: saveImage,
-      // Arrow into a tray.
-      icon: 'M8 2.5v7.5M4.8 7l3.2 3.2l3.2-3.2M3 11.5v2h10v-2',
+      icon: Download04Icon,
     },
   ];
 </script>
@@ -41,7 +40,7 @@
 <div class="actions" role="toolbar" aria-label={$t('toolbar.label')}>
   {#each ACTIONS as action (action.key)}
     <button type="button" onclick={action.run} aria-label={$t(`toolbar.${action.key}`)}>
-      <svg viewBox="0 0 16 16" aria-hidden="true"><path d={action.icon} /></svg>
+      <HugeiconsIcon icon={action.icon} size={18} strokeWidth={1.6} aria-hidden="true" />
       <span class="tip" aria-hidden="true">{$t(`toolbar.${action.key}`)}</span>
     </button>
   {/each}
@@ -86,16 +85,6 @@
   button:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 1px;
-  }
-
-  svg {
-    width: 1.1rem;
-    height: 1.1rem;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.4;
-    stroke-linecap: round;
-    stroke-linejoin: round;
   }
 
   /* Label under the button, shown on hover or keyboard focus. */

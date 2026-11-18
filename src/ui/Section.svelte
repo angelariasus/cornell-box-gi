@@ -1,12 +1,16 @@
 <!-- Collapsible group of controls with an uppercase heading. -->
 <script>
+  import { HugeiconsIcon } from '@hugeicons/svelte';
+  import { ArrowDown01Icon } from '@hugeicons/core-free-icons';
   let { title, open = $bindable(true), children } = $props();
 </script>
 
 <details class="section" bind:open>
   <summary>
     <h2>{title}</h2>
-    <svg class="chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6.5l3 3 3-3" /></svg>
+    <span class="chevron" aria-hidden="true">
+      <HugeiconsIcon icon={ArrowDown01Icon} size={16} strokeWidth={1.8} />
+    </span>
   </summary>
   <div class="group body">
     {@render children()}
@@ -35,7 +39,6 @@
   summary:hover h2,
   summary:hover .chevron {
     color: var(--fg);
-    stroke: var(--fg);
   }
 
   summary:focus-visible {
@@ -54,13 +57,8 @@
   }
 
   .chevron {
-    width: 1rem;
-    height: 1rem;
-    fill: none;
-    stroke: var(--muted);
-    stroke-width: 1.6;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    display: grid;
+    color: var(--muted);
     transform: rotate(-90deg);
     transition: transform 0.15s;
   }

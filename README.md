@@ -210,6 +210,7 @@ docs/                 manual, captures
 
 - Scene data: Cornell Ann S. Bowers College of Computing and Information Science,
   [Cornell Box Data](https://bowers.cornell.edu/computer-graphics/data).
+- Interface icons: [Hugeicons](https://hugeicons.com) free set (MIT).
 - Methods follow Whitted (1980), Goral et al. (1984), Cohen et al. (1988), Kajiya (1986),
   Heckbert (1990), Jensen (1996) and Pharr, Jakob & Humphreys,
   [_Physically Based Rendering_](https://pbr-book.org/) (4th ed., 2023).

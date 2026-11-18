@@ -1,6 +1,8 @@
 <!-- Status shown at the top of the canvas: compilation, radiosity progress, errors and compatibility
      warnings. -->
 <script>
+  import { HugeiconsIcon } from '@hugeicons/svelte';
+  import { Cancel01Icon } from '@hugeicons/core-free-icons';
   import { t } from '../i18n/index.js';
   import { params, status } from '../state/params.js';
   import { radiosityState } from '../state/radiosity.js';
@@ -56,7 +58,8 @@
       <button
         type="button"
         aria-label={$t('status.dismiss')}
-        onclick={() => (dismissedWarning = true)}>×</button
+        onclick={() => (dismissedWarning = true)}
+        ><HugeiconsIcon icon={Cancel01Icon} size={16} /></button
       >
     {/if}
   </div>
@@ -100,10 +103,11 @@
   }
 
   button {
+    display: grid;
+    padding: 0;
     border: none;
     background: none;
+    color: inherit;
     cursor: pointer;
-    font-size: 1.1rem;
-    line-height: 1;
   }
 </style>
