@@ -26,7 +26,7 @@ export const DEFAULT_PARAMS = Object.freeze({
   rayInspector: false, // click a pixel to draw its ray tree (Figure 7)
   // Path tracing
   pathMaxBounces: 8,
-  pathMaxSamples: 1024,
+  pathMaxSamples: 4096,
   pathNextEvent: true,
   pathCosineSampling: true,
   pathRussianRoulette: true,
