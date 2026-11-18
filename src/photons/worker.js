@@ -1,5 +1,5 @@
 /**
- * Web Worker that traces the caustic photon map off the main thread (PLAN.md, section 3.5).
+ * Web Worker that traces the caustic photon map off the main thread.
  *
  * In:   { type: 'trace', id, scene, photons, radius, ior }
  * Out:  { type: 'progress', id, pct }

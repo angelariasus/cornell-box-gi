@@ -4,7 +4,7 @@ Global Illumination Viewer renders the Cornell box with four illumination method
 compared on the same scene: Phong (local), Whitted ray tracing, path tracing and radiosity, plus
 photon-mapped caustics and a two-pass radiosity + ray tracing method for the spheres scene. It was
 built for the report _Modelos de iluminación global_ (Computación Visual, UNMSM) and is the
-basis for its Appendix B. Measured results are in [verification.md](verification.md).
+basis for its Appendix B.
 
 - Repository: _to be published_ (GitHub)
 - Live version: _to be published_ (Vercel)
@@ -194,7 +194,7 @@ src/
 ├─ radiosity/              patches, form factors, solvers (Jacobi, Gauss-Seidel, progressive), worker
 └─ photons/                caustic photon tracing and density estimate, worker
 tests/                     Vitest suites
-docs/                      this manual, verification log, captures
+docs/                      this manual, captures, report drafts, video script
 ```
 
 ## 7. Tests
@@ -213,9 +213,6 @@ docs/                      this manual, verification log, captures
 | `render.test.js`      | 10    | Shader assembly and error mapping, camera math, white balance                                     |
 | `i18n.test.js`        | 7     | Both languages have the same texts and placeholders; every text used exists                       |
 | `structure.test.js`   | 20    | The files the project is built on exist                                                           |
-
-The browser checks (image comparisons between methods, timings) are recorded in
-[verification.md](verification.md).
 
 ## 8. Captures
 
@@ -253,5 +250,5 @@ Adding `?cull=0` to the address disables the block bounding boxes (for performan
 - Path tracing on an integrated GPU needs about a minute for 4096 samples per pixel at 1000 × 1000
   (68 s for the classic scene and 55 s for the spheres scene on the test machine).
 - The two-pass method in the spheres scene misses light that the spheres send to the walls and that
-  bounces again (about 10% darker than path tracing); see verification.md.
+  bounces again (about 10% darker than path tracing).
 - Designed for desktop browsers; it works on phones but slowly.

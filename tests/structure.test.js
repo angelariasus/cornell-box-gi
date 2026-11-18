@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 
-// Files every phase builds on. Keeps the layout described in PLAN.md honest.
+// Files the rest of the project builds on.
 const requiredFiles = [
   'src/main.js',
   'src/App.svelte',

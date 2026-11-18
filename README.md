@@ -172,8 +172,7 @@ Measured in the browser:
 | Radiosity solve time (384 patches)                              | 0.2 s         |
 | Photon map, 500,000 photons                                     | 0.22 s        |
 
-The full log, with timings on an integrated Intel GPU, is in
-[`docs/verification.md`](docs/verification.md).
+Timings were measured on an integrated Intel GPU.
 
 ## Project structure
 
@@ -189,14 +188,12 @@ src/
 ├─ radiosity/         patches, form factors, solvers, worker
 └─ photons/           caustic photon tracing, worker
 tests/                Vitest suites
-docs/                 manual, verification log, captures
+docs/                 manual, captures
 ```
 
 ## Documentation
 
 - [User manual](docs/manual.md): every control, things to try and how the renderer works.
-- [Verification log](docs/verification.md): every measurement taken during development.
-- [Development plan](PLAN.md): design decisions, phases and scope.
 
 ## Limitations
 
