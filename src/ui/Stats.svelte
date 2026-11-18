@@ -1,5 +1,6 @@
 <!-- Live statistics reported by the renderer, with quick quality presets for path tracing. -->
 <script>
+  import { fmt, t } from '../i18n/index.js';
   import { params, stats } from '../state/params.js';
 
   // Path tracing stops at this many samples per pixel. Each step quadruples the samples and
@@ -17,10 +18,10 @@
 </script>
 
 <section class="group" aria-labelledby="stats-heading">
-  <h2 id="stats-heading">Statistics</h2>
+  <h2 id="stats-heading">{$t('stats.heading')}</h2>
   {#if showPresets}
     <div class="field">
-      <span id="quality-label">Path tracing samples per pixel</span>
+      <span id="quality-label">{$t('stats.presets')}</span>
       <div class="segmented" role="radiogroup" aria-labelledby="quality-label">
         {#each PRESETS as preset (preset)}
           <button
@@ -34,13 +35,13 @@
           </button>
         {/each}
       </div>
-      <p class="hint">Each step halves the noise (1/√N); raising it keeps the current samples</p>
+      <p class="hint">{$t('stats.presetsHint')}</p>
     </div>
   {/if}
   <div
     class="progress"
     role="progressbar"
-    aria-label="Accumulated samples"
+    aria-label={$t('stats.progress')}
     aria-valuemin="0"
     aria-valuemax={$stats.maxSamples}
     aria-valuenow={$stats.samples}
@@ -48,21 +49,21 @@
     <div class="bar" style:width="{progress * 100}%"></div>
   </div>
   <dl>
-    <dt>Samples per pixel</dt>
+    <dt>{$t('stats.samples')}</dt>
     <dd>{$stats.samples} / {$stats.maxSamples}</dd>
     {#if $stats.split}
-      <dt>Right side</dt>
+      <dt>{$t('stats.rightSide')}</dt>
       <dd>{$stats.split.samples} / {$stats.split.maxSamples}</dd>
     {/if}
-    <dt>Resolution</dt>
+    <dt>{$t('stats.resolution')}</dt>
     <dd>{$stats.width} × {$stats.height}</dd>
-    <dt>Frame time</dt>
-    <dd>{$stats.converged ? 'done' : `${$stats.frameMs.toFixed(1)} ms`}</dd>
+    <dt>{$t('stats.frameTime')}</dt>
+    <dd>{$stats.converged ? $t('stats.done') : `${$fmt($stats.frameMs, 1)} ms`}</dd>
     {#if !$stats.converged && $stats.samplesPerFrame}
-      <dt>Samples per frame</dt>
-      <dd>{$stats.samplesPerFrame}{$stats.autoSamples ? ' (auto)' : ''}</dd>
+      <dt>{$t('stats.samplesPerFrame')}</dt>
+      <dd>{$stats.samplesPerFrame}{$stats.autoSamples ? ` ${$t('stats.auto')}` : ''}</dd>
     {/if}
-    <dt>Buffer</dt>
+    <dt>{$t('stats.buffer')}</dt>
     <dd>{$stats.format}</dd>
   </dl>
 </section>

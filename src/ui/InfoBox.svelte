@@ -1,68 +1,20 @@
 <!-- Short explanation of what is on screen, the report section it comes from and something to
      try. Doubles as a script for the presentation. -->
 <script>
+  import { t } from '../i18n/index.js';
   import { params } from '../state/params.js';
 
-  const INFO = {
-    phong: {
-      title: 'Local illumination',
-      text: 'Each point sees only the light, through one shadow ray. No light bounces between surfaces: the ceiling stays dark, shadows are hard and there is no color bleeding.',
-      source: 'Report: Chapter 1, Example 1',
-      try: {
-        classic: 'Switch to Path tracing and watch the ceiling and the block sides light up.',
-        spheres: 'The mirror and the glass reflect nothing: a local model cannot follow rays.',
-      },
-    },
-    whitted: {
-      title: 'Whitted ray tracing',
-      text: 'Rays follow exact mirror reflection and refraction (Equation 4, Figure 8). Diffuse surfaces still use the local model, so it only captures LDS*E | LS*E paths.',
-      source: 'Report: Chapter 3, Example 2',
-      try: {
-        classic: 'With only diffuse walls it looks exactly like Phong: no indirect light.',
-        spheres:
-          'Lower Max depth to 0 and 1, or set the glass index to 1.00. Photon-mapped caustics add the light Whitted misses.',
-      },
-    },
-    path: {
-      title: 'Path tracing',
-      text: 'One random path per sample solves the rendering equation by Monte Carlo (Equation 10, Figure 14). It captures every path L(D|S)*E; the noise fades as 1/√N.',
-      source: 'Report: Chapter 5, Example 4',
-      try: {
-        classic:
-          'Turn next event estimation off, then switch to uniform sampling: same image, more noise.',
-        spheres:
-          'Look under the glass sphere: the caustic (LSDE) converges slowly. Then turn photon-mapped caustics on.',
-      },
-    },
-    radiosity: {
-      title: 'Radiosity',
-      text: 'An energy balance between diffuse patches (Equation 6) solved as a linear system. The solution does not depend on the camera, but it only models LD*E paths.',
-      source: 'Report: Chapter 4, Example 3',
-      try: {
-        classic:
-          'Orbit the camera (nothing is recomputed), move Shown step, or turn smooth shading off.',
-        spheres:
-          'Two-pass: radiosity for the walls, ray tracing through the spheres. No caustic under the glass until you turn the photon map on.',
-      },
-    },
-    debug: {
-      title: 'Geometry debug view',
-      text: 'Material colors or surface normals, without lighting. Used to check the Cornell box data.',
-      source: 'Cornell Box Data (bowers.cornell.edu)',
-      try: { classic: '', spheres: '' },
-    },
-  };
-
-  const info = $derived(INFO[$params.mode]);
-  const tip = $derived(info?.try[$params.scene]);
+  // Texts live in the dictionaries under info.<method>; the tip depends on the scene.
+  const key = $derived(`info.${$params.mode}`);
+  const tip = $derived($t(`${key}.${$params.scene === 'spheres' ? 'tipSpheres' : 'tipClassic'}`));
 </script>
 
-{#if info}
+{#if $params.mode}
   <section class="info" aria-live="polite">
-    <h2>{info.title}</h2>
-    <p>{info.text}</p>
-    {#if tip}<p class="tip"><span>Try:</span> {tip}</p>{/if}
-    <p class="source">{info.source}</p>
+    <h2>{$t(`${key}.title`)}</h2>
+    <p>{$t(`${key}.text`)}</p>
+    {#if tip}<p class="tip"><span>{$t('info.try')}</span> {tip}</p>{/if}
+    <p class="source">{$t(`${key}.source`)}</p>
   </section>
 {/if}
 

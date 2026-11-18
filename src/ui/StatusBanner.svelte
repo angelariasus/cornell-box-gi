@@ -1,6 +1,7 @@
 <!-- Status shown over the canvas: compilation, radiosity progress, errors and compatibility
      warnings. -->
 <script>
+  import { t } from '../i18n/index.js';
   import { params, status } from '../state/params.js';
   import { radiosityState } from '../state/radiosity.js';
   import { causticsState } from '../state/caustics.js';
@@ -11,13 +12,13 @@
     switch ($status.state) {
       case 'idle':
       case 'compiling':
-        return { kind: 'info', text: 'Compiling shaders…' };
+        return { kind: 'info', text: $t('status.compiling') };
       case 'no-webgl2':
-        return { kind: 'error', text: 'This browser does not support WebGL2.' };
+        return { kind: 'error', text: $t('status.noWebgl') };
       case 'context-lost':
         return {
           kind: 'warning',
-          text: 'The graphics context was lost. Waiting for the browser to restore it…',
+          text: $t('status.contextLost'),
         };
       case 'error':
         return { kind: 'error', text: $status.message, code: true };
@@ -25,17 +26,17 @@
         if ($params.mode === 'radiosity' && $radiosityState.status === 'solving') {
           const what =
             $radiosityState.phase === 'formFactors'
-              ? 'Computing form factors'
-              : 'Solving radiosity';
+              ? $t('radiosity.computingFormFactors')
+              : $t('radiosity.solvingRadiosity');
           return { kind: 'info', text: `${what}… ${$radiosityState.pct}%` };
         }
         if ($params.causticsEnabled && $causticsState.status === 'tracing') {
-          return { kind: 'info', text: `Tracing photons… ${$causticsState.pct}%` };
+          return { kind: 'info', text: `${$t('caustics.tracing')}… ${$causticsState.pct}%` };
         }
         if ($status.format && $status.format !== 'float32' && !dismissedWarning) {
           return {
             kind: 'warning',
-            text: `This device cannot render to 32-bit float buffers; using ${$status.format}. Images may show banding.`,
+            text: $t('status.lowPrecision', { format: $status.format }),
             dismissible: true,
           };
         }
@@ -52,7 +53,10 @@
       <span>{message.text}</span>
     {/if}
     {#if message.dismissible}
-      <button type="button" aria-label="Dismiss" onclick={() => (dismissedWarning = true)}>×</button
+      <button
+        type="button"
+        aria-label={$t('status.dismiss')}
+        onclick={() => (dismissedWarning = true)}>×</button
       >
     {/if}
   </div>

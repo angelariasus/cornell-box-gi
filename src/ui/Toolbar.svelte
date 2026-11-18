@@ -1,5 +1,6 @@
 <!-- Camera reset, accumulation restart and PNG capture. -->
 <script>
+  import { t } from '../i18n/index.js';
   import { params, stats } from '../state/params.js';
 
   let { renderer } = $props();
@@ -18,10 +19,12 @@
 
 <div class="toolbar">
   <button type="button" class="button" onclick={() => renderer?.resetCamera()}>
-    Official camera
+    {$t('toolbar.officialCamera')}
   </button>
-  <button type="button" class="button" onclick={() => renderer?.restart()}>Restart</button>
-  <button type="button" class="button" onclick={saveImage}>Save PNG</button>
+  <button type="button" class="button" onclick={() => renderer?.restart()}
+    >{$t('toolbar.restart')}</button
+  >
+  <button type="button" class="button" onclick={saveImage}>{$t('toolbar.savePng')}</button>
 </div>
 
 <style>

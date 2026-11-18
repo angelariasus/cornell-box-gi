@@ -3,12 +3,13 @@
   side. Moving it only changes the display pass, so neither image loses its samples.
 -->
 <script>
-  import { METHODS, params } from '../state/params.js';
+  import { t } from '../i18n/index.js';
+  import { params } from '../state/params.js';
 
   let container = $state();
   let dragging = $state(false);
 
-  const nameOf = (id) => METHODS.find((m) => m.id === id)?.name ?? id;
+  const nameOf = (id) => $t(`methods.${id}.name`);
 
   function moveTo(clientX) {
     const box = container.getBoundingClientRect();
@@ -47,7 +48,7 @@
 {#if $params.splitView}
   <div class="split" bind:this={container}>
     <span class="label left" style:right="{(1 - $params.splitPosition) * 100}%">
-      {$params.mode === 'debug' ? 'Debug view' : nameOf($params.mode)}
+      {nameOf($params.mode)}
     </span>
     <span class="label right" style:left="{$params.splitPosition * 100}%">
       {nameOf($params.splitMode)}
@@ -58,7 +59,7 @@
       style:left="{$params.splitPosition * 100}%"
       role="slider"
       tabindex="0"
-      aria-label="Split screen divider"
+      aria-label={$t('compare.divider')}
       aria-valuemin="5"
       aria-valuemax="95"
       aria-valuenow={Math.round($params.splitPosition * 100)}

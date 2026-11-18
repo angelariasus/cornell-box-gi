@@ -1,11 +1,12 @@
 <!-- Method selector. In the spheres scene radiosity runs as a two-pass method with ray tracing,
      and its description says so. -->
 <script>
+  import { t } from '../i18n/index.js';
   import { METHODS, methodSupported, params } from '../state/params.js';
 </script>
 
 <section class="group" aria-labelledby="method-heading">
-  <h2 id="method-heading">Method</h2>
+  <h2 id="method-heading">{$t('method.heading')}</h2>
   <div class="methods" role="radiogroup" aria-labelledby="method-heading">
     {#each METHODS as method (method.id)}
       {@const enabled = methodSupported(method, $params.scene)}
@@ -17,14 +18,14 @@
           bind:group={$params.mode}
           disabled={!enabled}
         />
-        <span class="name">{method.name}</span>
+        <span class="name">{$t(`methods.${method.id}.name`)}</span>
         <span class="detail">
           {#if !method.available}
-            Coming soon
-          {:else if $params.scene === 'spheres' && method.detailSpheres}
-            {method.detailSpheres}
+            {$t('method.comingSoon')}
+          {:else if $params.scene === 'spheres' && method.hasSpheresDetail}
+            {$t(`methods.${method.id}.detailSpheres`)}
           {:else}
-            {method.detail}
+            {$t(`methods.${method.id}.detail`)}
           {/if}
         </span>
       </label>
