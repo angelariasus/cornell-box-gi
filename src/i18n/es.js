@@ -17,22 +17,22 @@ export default {
   },
   method: { heading: 'Método', comingSoon: 'Próximamente' },
   methods: {
-    phong: { name: 'Phong', short: 'Phong', detail: 'Modelo local · Capítulo 1' },
+    phong: { name: 'Phong', short: 'Phong', detail: 'Modelo local' },
     whitted: {
       name: 'Trazado de rayos de Whitted',
       short: 'Whitted',
-      detail: 'Reflexión y refracción · Capítulo 3',
+      detail: 'Reflexión y refracción',
     },
     path: {
       name: 'Trazado de caminos',
       short: 'Caminos',
-      detail: 'Iluminación global por Monte Carlo · Capítulo 5',
+      detail: 'Iluminación global por Monte Carlo',
     },
     radiosity: {
       name: 'Radiosidad',
       short: 'Radiosidad',
-      detail: 'Interreflexión difusa · Capítulo 4',
-      detailSpheres: 'Dos pasadas con trazado de rayos · Sección 7.1',
+      detail: 'Interreflexión difusa',
+      detailSpheres: 'Dos pasadas con trazado de rayos',
     },
     debug: { name: 'Vista de depuración', short: 'Depuración', detail: 'Revisión de la geometría' },
   },
@@ -41,7 +41,7 @@ export default {
     phong: {
       title: 'Iluminación local',
       text: 'Cada punto ve solo la luz, a través de un rayo de sombra. La luz no rebota entre superficies: el techo queda oscuro, las sombras son duras y no hay sangrado de color.',
-      source: 'Informe: Capítulo 1, Ejemplo 1',
+      source: 'Informe: Ejemplo 1',
       tipClassic:
         'Cambia a trazado de caminos y observa cómo se iluminan el techo y los lados de los bloques.',
       tipSpheres: 'El espejo y el vidrio no reflejan nada: un modelo local no puede seguir rayos.',
@@ -49,7 +49,7 @@ export default {
     whitted: {
       title: 'Trazado de rayos de Whitted',
       text: 'Los rayos siguen la reflexión y la refracción exactas (Ecuación 4, Figura 8). Las superficies difusas siguen usando el modelo local, así que solo captura caminos LDS*E | LS*E.',
-      source: 'Informe: Capítulo 3, Ejemplo 2',
+      source: 'Informe: Ejemplo 2',
       tipClassic: 'Con solo paredes difusas se ve igual que Phong: no hay luz indirecta.',
       tipSpheres:
         'Baja la profundidad máxima a 0 y a 1, o pon el índice del vidrio en 1,00. Las cáusticas por mapa de fotones agregan la luz que Whitted no captura.',
@@ -57,7 +57,7 @@ export default {
     path: {
       title: 'Trazado de caminos',
       text: 'Un camino aleatorio por muestra resuelve la ecuación de render por Monte Carlo (Ecuación 10, Figura 14). Captura todos los caminos L(D|S)*E; el ruido baja como 1/√N.',
-      source: 'Informe: Capítulo 5, Ejemplo 4',
+      source: 'Informe: Ejemplo 4',
       tipClassic:
         'Desactiva la estimación de evento siguiente y luego cambia a muestreo uniforme: la misma imagen, con más ruido.',
       tipSpheres:
@@ -66,7 +66,7 @@ export default {
     radiosity: {
       title: 'Radiosidad',
       text: 'Un balance de energía entre parches difusos (Ecuación 6) resuelto como un sistema lineal. La solución no depende de la cámara, pero solo modela caminos LD*E.',
-      source: 'Informe: Capítulo 4, Ejemplo 3',
+      source: 'Informe: Ejemplo 3',
       tipClassic:
         'Gira la cámara (no se recalcula nada), mueve el paso mostrado o desactiva el sombreado suave.',
       tipSpheres:
@@ -100,7 +100,7 @@ export default {
     stepFinal: '{step} (final)',
     timings: 'Factores de forma {formFactors} ms · solución {solve} ms',
     smooth: 'Sombreado suave',
-    smoothHint: 'Desactivado muestra cada parche plano y deja ver la malla (Sección 4.4)',
+    smoothHint: 'Desactivado muestra cada parche plano y deja ver la malla',
   },
   path: {
     heading: 'Ajustes del trazado de caminos',
@@ -132,8 +132,7 @@ export default {
   caustics: {
     heading: 'Cáusticas (mapa de fotones)',
     toggle: 'Cáusticas por mapa de fotones',
-    toggleHint:
-      'Luz que atraviesa el vidrio o se refleja en el espejo, trazada desde la lámpara (Capítulo 6)',
+    toggleHint: 'Luz que atraviesa el vidrio o se refleja en el espejo, trazada desde la lámpara',
     photons: 'Fotones',
     radius: 'Radio de búsqueda r',
     radiusValue: '{n} unidades',
