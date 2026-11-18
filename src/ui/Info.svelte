@@ -92,7 +92,6 @@
     font-weight: 400;
     line-height: 1.45;
     text-transform: none;
-    letter-spacing: normal;
     pointer-events: none;
   }
 
