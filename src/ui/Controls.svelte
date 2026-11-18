@@ -207,6 +207,11 @@
       format={fixed(2)}
       hint="1.00 = air (no refraction) · 1.50 = glass · 2.00 ≈ diamond"
     />
+    <Toggle
+      label="Ray inspector"
+      bind:checked={$params.rayInspector}
+      hint="Click a pixel to draw its ray tree (Figure 7)"
+    />
   </section>
 {/if}
 

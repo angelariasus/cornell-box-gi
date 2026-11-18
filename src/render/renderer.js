@@ -10,7 +10,8 @@
  */
 
 import { packScene, SHADER_LIMITS } from '../scene/cornell.js';
-import { OrbitCamera } from './camera.js';
+import { OrbitCamera, projectPoint, viewTanHalfFov } from './camera.js';
+import { normalize } from '../math/math.js';
 import {
   assembleShader,
   compileProgram,
@@ -149,6 +150,8 @@ const KEEP_ACCUMULATION = new Set([
   'radiosityMethod',
   'radiosityIterations',
   'radiosityStep',
+  // Drawn by the UI over the canvas, not by the renderer.
+  'rayInspector',
   // Photon map settings: the image changes only when the new photon map arrives.
   'causticsPhotons',
   'causticsRadius',
@@ -425,11 +428,8 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
     gl.uniform3fv(program.loc('uCamForward'), f.forward);
     gl.uniform3fv(program.loc('uCamRight'), f.right);
     gl.uniform3fv(program.loc('uCamUp'), f.up);
-    // The official view is square. On portrait screens keep the horizontal field of view
-    // instead, so the whole box stays visible.
     const aspect = width / height;
-    const tanHalfFov = Math.tan((camera.fovY * Math.PI) / 360) / Math.min(aspect, 1);
-    gl.uniform1f(program.loc('uTanHalfFov'), tanHalfFov);
+    gl.uniform1f(program.loc('uTanHalfFov'), viewTanHalfFov(camera.fovY, aspect));
     gl.uniform1f(program.loc('uAspect'), aspect);
   }
 
@@ -659,6 +659,43 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
         'caustics',
         irradiance ? packCellData(irradiance, layout, layout.cellCount, sceneId) : null,
       );
+    },
+
+    /** The scene currently shown (normalized data from cornell.js). */
+    getScene() {
+      return scene;
+    },
+
+    /**
+     * Primary ray through a point of the canvas given in CSS pixels from its top-left corner,
+     * with the same camera as the shaders (used by the ray inspector).
+     */
+    rayThroughCanvasPoint(cssX, cssY) {
+      const aspect = cssSize.width / cssSize.height;
+      const tanHalfFov = viewTanHalfFov(camera.fovY, aspect);
+      const f = camera.frame();
+      const x = ((cssX / cssSize.width) * 2 - 1) * aspect * tanHalfFov;
+      const y = (1 - (cssY / cssSize.height) * 2) * tanHalfFov;
+      const dir = normalize([
+        f.forward[0] + x * f.right[0] + y * f.up[0],
+        f.forward[1] + x * f.right[1] + y * f.up[1],
+        f.forward[2] + x * f.right[2] + y * f.up[2],
+      ]);
+      return { origin: f.position, dir };
+    },
+
+    /**
+     * Canvas position (CSS pixels from the top-left corner) of a world point, and its depth
+     * along the view direction (≤ 0 means behind the camera).
+     */
+    projectToCanvas(point) {
+      const aspect = cssSize.width / cssSize.height;
+      const p = projectPoint(camera.frame(), viewTanHalfFov(camera.fovY, aspect), aspect, point);
+      return {
+        x: ((p.x + 1) / 2) * cssSize.width,
+        y: ((1 - p.y) / 2) * cssSize.height,
+        depth: p.depth,
+      };
     },
 
     /** Moves the camera back to the official Cornell view. */

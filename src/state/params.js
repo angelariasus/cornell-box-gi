@@ -23,6 +23,7 @@ export const DEFAULT_PARAMS = Object.freeze({
   // Whitted ray tracing
   whittedDepth: 5,
   glassIor: 1.5,
+  rayInspector: false, // click a pixel to draw its ray tree (Figure 7)
   // Path tracing
   pathMaxBounces: 8,
   pathMaxSamples: 1024,
