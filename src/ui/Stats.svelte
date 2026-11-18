@@ -26,6 +26,10 @@
     <dd>{$stats.width} × {$stats.height}</dd>
     <dt>Frame time</dt>
     <dd>{$stats.converged ? 'done' : `${$stats.frameMs.toFixed(1)} ms`}</dd>
+    {#if !$stats.converged && $stats.samplesPerFrame}
+      <dt>Samples per frame</dt>
+      <dd>{$stats.samplesPerFrame}{$stats.autoSamples ? ' (auto)' : ''}</dd>
+    {/if}
     <dt>Buffer</dt>
     <dd>{$stats.format}</dd>
   </dl>

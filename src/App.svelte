@@ -5,6 +5,7 @@
   import { params, rendererParams, stats, status } from './state/params.js';
   import { createRadiosityController } from './state/radiosity.js';
   import Controls from './ui/Controls.svelte';
+  import InfoBox from './ui/InfoBox.svelte';
   import MethodPicker from './ui/MethodPicker.svelte';
   import ScenePicker from './ui/ScenePicker.svelte';
   import Stats from './ui/Stats.svelte';
@@ -73,6 +74,7 @@
 
     <ScenePicker />
     <MethodPicker />
+    <InfoBox />
     <Controls />
     <Toolbar {renderer} />
     <Stats />

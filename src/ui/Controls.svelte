@@ -163,11 +163,12 @@
     />
     <Slider
       label="Samples per frame"
-      min={1}
+      min={0}
       max={8}
       step={1}
       bind:value={$params.samplesPerFrame}
-      hint="Lower it if the page stutters"
+      format={(v) => (Number(v) === 0 ? 'Auto' : String(v))}
+      hint="Auto fills each frame while keeping about 30 fps"
     />
     <Slider
       label="Max samples per pixel"

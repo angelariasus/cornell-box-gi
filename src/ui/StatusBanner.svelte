@@ -1,6 +1,8 @@
-<!-- Renderer status shown over the canvas: compilation, errors and compatibility warnings. -->
+<!-- Status shown over the canvas: compilation, radiosity progress, errors and compatibility
+     warnings. -->
 <script>
-  import { status } from '../state/params.js';
+  import { params, status } from '../state/params.js';
+  import { radiosityState } from '../state/radiosity.js';
 
   let dismissedWarning = $state(false);
 
@@ -19,6 +21,13 @@
       case 'error':
         return { kind: 'error', text: $status.message, code: true };
       default:
+        if ($params.mode === 'radiosity' && $radiosityState.status === 'solving') {
+          const what =
+            $radiosityState.phase === 'formFactors'
+              ? 'Computing form factors'
+              : 'Solving radiosity';
+          return { kind: 'info', text: `${what}… ${$radiosityState.pct}%` };
+        }
         if ($status.format && $status.format !== 'float32' && !dismissedWarning) {
           return {
             kind: 'warning',
