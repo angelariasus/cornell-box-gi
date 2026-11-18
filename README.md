@@ -216,9 +216,10 @@ docs/                 manual, captures
   Heckbert (1990), Jensen (1996) and Pharr, Jakob & Humphreys,
   [_Physically Based Rendering_](https://pbr-book.org/) (4th ed., 2023).
 
-## Author
+## Authors
 
-[@angelariasus](https://github.com/angelariasus)
+- [@angelariasus](https://github.com/angelariasus)
+- [@engiegarcia](https://github.com/engiegarcia)
 
 ## License
 

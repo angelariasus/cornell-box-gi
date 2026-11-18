@@ -4,6 +4,9 @@
   "private": true,
   "description": "Interactive global illumination viewer: the Cornell box rendered with Phong, Whitted ray tracing, path tracing and radiosity in WebGL2.",
   "author": "angelariasus",
+  "contributors": [
+    "engiegarcia"
+  ],
   "license": "MIT",
   "type": "module",
   "scripts": {
