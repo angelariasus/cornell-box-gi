@@ -19,6 +19,9 @@ export const DEFAULT_PARAMS = Object.freeze({
   phongShininess: 32,
   phongSpecular: 0.1,
   phongAmbient: 0.05,
+  // Whitted ray tracing
+  whittedDepth: 5,
+  glassIor: 1.5,
   // Debug view
   debugView: 'albedo',
 });
@@ -35,7 +38,7 @@ export const METHODS = Object.freeze([
     id: 'whitted',
     name: 'Whitted ray tracing',
     detail: 'Reflection and refraction · Chapter 3',
-    available: false,
+    available: true,
   },
   {
     id: 'path',

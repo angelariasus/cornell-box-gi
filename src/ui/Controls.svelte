@@ -23,9 +23,34 @@
   }
 </script>
 
-{#if $params.mode === 'phong'}
+{#if $params.mode === 'whitted'}
+  <section class="group" aria-labelledby="whitted-heading">
+    <h2 id="whitted-heading">Whitted settings</h2>
+    <Slider
+      label="Max depth"
+      min={0}
+      max={6}
+      step={1}
+      bind:value={$params.whittedDepth}
+      hint="Depth of the ray tree (Figure 8). 0 = primary rays only"
+    />
+    <Slider
+      label="Glass index η"
+      min={1}
+      max={2}
+      step={0.01}
+      bind:value={$params.glassIor}
+      format={fixed(2)}
+      hint="1.00 = air (no refraction) · 1.50 = glass · 2.00 ≈ diamond"
+    />
+  </section>
+{/if}
+
+{#if $params.mode === 'phong' || $params.mode === 'whitted'}
   <section class="group" aria-labelledby="phong-heading">
-    <h2 id="phong-heading">Phong settings</h2>
+    <h2 id="phong-heading">
+      {$params.mode === 'whitted' ? 'Local term (Phong)' : 'Phong settings'}
+    </h2>
     <Slider
       label="Shininess n"
       min={0}
