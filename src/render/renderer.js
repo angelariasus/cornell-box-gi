@@ -28,6 +28,7 @@ import debugFrag from './shaders/debug.frag?raw';
 import localGlsl from './shaders/local.glsl?raw';
 import phongFrag from './shaders/phong.frag?raw';
 import whittedFrag from './shaders/whitted.frag?raw';
+import pathtracerFrag from './shaders/pathtracer.frag?raw';
 
 const MAX_SAMPLES_PER_FRAME = 8;
 const MAX_DEVICE_PIXEL_RATIO = 2;
@@ -56,6 +57,13 @@ const MODES = {
     maxSamples: 16,
     toneMapping: 1,
   },
+  path: {
+    source: pathtracerFrag,
+    file: 'pathtracer.frag',
+    parts: [],
+    maxSamples: null, // set by params.pathMaxSamples
+    toneMapping: 1,
+  },
   debug: { source: debugFrag, file: 'debug.frag', parts: [], maxSamples: 16, toneMapping: 0 },
 };
 
@@ -69,7 +77,7 @@ const DEFINES = {
 };
 
 const DEFAULT_PARAMS = {
-  exposure: 1,
+  exposure: 1.5,
   resolutionScale: 1,
   samplesPerFrame: 1,
   debugView: 'albedo',
@@ -78,10 +86,34 @@ const DEFAULT_PARAMS = {
   phongAmbient: 0.05,
   whittedDepth: 5,
   glassIor: 1.5,
+  pathMaxBounces: 8,
+  pathMaxSamples: 4096,
+  pathNextEvent: true,
+  pathCosineSampling: true,
+  pathRussianRoulette: true,
+  whiteBalance: true,
 };
 
-/** Parameters that only affect the display pass: changing them keeps the accumulation. */
-const DISPLAY_ONLY = new Set(['exposure']);
+/**
+ * Von Kries white balance for the scene light: per-channel gains that turn the light's color
+ * into a neutral gray of the same luminance, like a camera set to that illuminant. The
+ * measured Cornell light is orange, so without it the white walls look yellow.
+ */
+export function whiteBalanceGains(emission) {
+  const luminance = 0.2126 * emission[0] + 0.7152 * emission[1] + 0.0722 * emission[2];
+  return emission.map((c) => (c > 0 ? luminance / c : 1));
+}
+
+/**
+ * Parameters that do not change the image being computed: the display (exposure), how fast
+ * samples arrive, or where accumulation stops. Changing them keeps the accumulated samples.
+ */
+const KEEP_ACCUMULATION = new Set([
+  'exposure',
+  'whiteBalance',
+  'samplesPerFrame',
+  'pathMaxSamples',
+]);
 
 /**
  * @param {HTMLCanvasElement} canvas
@@ -226,7 +258,7 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
   }
 
   function maxSamples() {
-    return MODES[mode].maxSamples;
+    return MODES[mode].maxSamples ?? params.pathMaxSamples;
   }
 
   function setSceneUniforms(program) {
@@ -248,6 +280,10 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
     gl.uniform1f(program.loc('uAmbient'), params.phongAmbient);
     gl.uniform1i(program.loc('uMaxDepth'), params.whittedDepth);
     gl.uniform1f(program.loc('uGlassIor'), params.glassIor);
+    gl.uniform1i(program.loc('uMaxBounces'), params.pathMaxBounces);
+    gl.uniform1i(program.loc('uNextEvent'), params.pathNextEvent ? 1 : 0);
+    gl.uniform1i(program.loc('uCosineSampling'), params.pathCosineSampling ? 1 : 0);
+    gl.uniform1i(program.loc('uRussianRoulette'), params.pathRussianRoulette ? 1 : 0);
   }
 
   function setCameraUniforms(program, width, height) {
@@ -265,11 +301,11 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
     gl.uniform1f(program.loc('uAspect'), aspect);
   }
 
-  function methodPass() {
+  function methodPass(limit = maxSamples()) {
     const { gl } = context;
     const [read, write] = targets;
     const program = programs[mode].use();
-    const k = Math.min(params.samplesPerFrame, maxSamples() - sampleCount, MAX_SAMPLES_PER_FRAME);
+    const k = Math.min(params.samplesPerFrame, limit - sampleCount, MAX_SAMPLES_PER_FRAME);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, write.framebuffer);
     gl.viewport(0, 0, write.width, write.height);
@@ -302,6 +338,8 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
     gl.uniform1i(display.loc('uAccumulated'), 0);
     gl.uniform1f(display.loc('uExposure'), params.exposure);
     gl.uniform1i(display.loc('uToneMapping'), MODES[mode].toneMapping);
+    const gains = params.whiteBalance ? whiteBalanceGains(scene.light.emission) : [1, 1, 1];
+    gl.uniform3fv(display.loc('uWhiteBalance'), gains);
     gl.bindVertexArray(vao);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
@@ -391,7 +429,7 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
       if (changed.length === 0) return;
       const scaleChanged = merged.resolutionScale !== params.resolutionScale;
       params = merged;
-      if (changed.every((key) => DISPLAY_ONLY.has(key))) {
+      if (changed.every((key) => KEEP_ACCUMULATION.has(key))) {
         needsDisplay = true;
       } else {
         resetAccumulation();
@@ -442,6 +480,47 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
         height: targets[0].height,
         samplesPerPass: params.samplesPerFrame,
       };
+    },
+
+    /**
+     * Accumulates up to `samples` samples per pixel as fast as the GPU allows, in chunks that
+     * yield to the browser so the page stays responsive and the GPU watchdog is never hit.
+     * Used for high-quality captures and for the convergence checks.
+     */
+    async accumulate(samples) {
+      if (!ready || !packed || !targets[0]) return null;
+      const { gl } = context;
+      const pixel = new Float32Array(4);
+      const start = performance.now();
+      while (sampleCount < samples) {
+        methodPass(samples);
+        needsDisplay = true;
+        if (frameIndex % 4 === 0) {
+          gl.bindFramebuffer(gl.FRAMEBUFFER, targets[0].framebuffer);
+          gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.FLOAT, pixel); // wait for the GPU
+          gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+          await new Promise((resolve) => setTimeout(resolve, 0));
+          if (!ready) return null;
+        }
+      }
+      displayPass();
+      needsDisplay = false;
+      return { samples: sampleCount, seconds: (performance.now() - start) / 1000 };
+    },
+
+    /**
+     * The accumulated image in linear radiance (before exposure and tone mapping), as
+     * {width, height, data: Float32Array RGBA}. Only available with float buffers.
+     */
+    readAccumulated() {
+      if (!ready || !targets[0] || context.format.type !== context.gl.FLOAT) return null;
+      const { gl } = context;
+      const { width, height, framebuffer } = targets[0];
+      const data = new Float32Array(width * height * 4);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+      gl.readPixels(0, 0, width, height, gl.RGBA, gl.FLOAT, data);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      return { width, height, samples: sampleCount, data };
     },
 
     /** PNG of the current image. */
