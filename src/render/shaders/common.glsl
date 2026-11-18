@@ -4,7 +4,7 @@
 // packScene() in src/scene/cornell.js:
 //   quads     4 x vec4: (origin, material), (u, 0), (v, 0), (normal, 0)
 //   spheres   2 x vec4: (center, radius), (material, 0, 0, 0)
-//   materials 3 x vec4: (albedo, type), (emission, ior), (albedo2, checkerTiles)
+//   materials 2 x vec4: (albedo, type), (emission, ior)
 // MAX_QUADS, MAX_SPHERES and MAX_MATERIALS are injected as #defines by the renderer.
 
 #define PI 3.14159265358979
@@ -23,7 +23,7 @@
 
 uniform vec4 uQuads[MAX_QUADS * 4];
 uniform vec4 uSpheres[MAX_SPHERES * 2];
-uniform vec4 uMaterials[MAX_MATERIALS * 3];
+uniform vec4 uMaterials[MAX_MATERIALS * 2];
 uniform int uQuadCount;
 uniform int uSphereCount;
 uniform int uLightIndex;
@@ -57,7 +57,7 @@ struct Hit {
   int material;
   int kind;             // HIT_QUAD or HIT_SPHERE
   int index;            // quad or sphere index
-  vec2 st;              // local quad coordinates in [0, 1]^2 (radiosity, checker)
+  vec2 st;              // local quad coordinates in [0, 1]^2 (radiosity, caustics)
 };
 
 // ---------------------------------------------------------------------------
@@ -215,15 +215,15 @@ vec3 offsetPoint(vec3 p, vec3 normal) {
 // ---------------------------------------------------------------------------
 
 int materialType(int m) {
-  return int(uMaterials[m * 3].w + 0.5);
+  return int(uMaterials[m * 2].w + 0.5);
 }
 
 vec3 materialEmission(int m) {
-  return uMaterials[m * 3 + 1].rgb;
+  return uMaterials[m * 2 + 1].rgb;
 }
 
 float materialIor(int m) {
-  return uMaterials[m * 3 + 1].w;
+  return uMaterials[m * 2 + 1].w;
 }
 
 // Refractive index of glass set from the panel (0 keeps the material's own value).
@@ -233,14 +233,9 @@ float glassIor(int m) {
   return uGlassIor > 0.0 ? uGlassIor : materialIor(m);
 }
 
-// Reflectance at a hit; applies the procedural checker pattern when the material has one.
-vec3 materialAlbedo(int m, Hit hit) {
-  vec4 pattern = uMaterials[m * 3 + 2];
-  if (pattern.w > 0.0) {
-    ivec2 cell = ivec2(floor(hit.st * pattern.w));
-    if (((cell.x + cell.y) & 1) == 1) return pattern.rgb;
-  }
-  return uMaterials[m * 3].rgb;
+// Diffuse reflectance (rho) of a material.
+vec3 materialAlbedo(int m) {
+  return uMaterials[m * 2].rgb;
 }
 
 // ---------------------------------------------------------------------------

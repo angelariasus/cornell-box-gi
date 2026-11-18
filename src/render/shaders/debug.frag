@@ -14,7 +14,7 @@ vec3 shade(Ray ray) {
   if (type == MAT_EMISSIVE) return vec3(1.0);
   else if (type == MAT_MIRROR) base = vec3(0.75, 0.8, 0.85);
   else if (type == MAT_GLASS) base = vec3(0.55, 0.75, 0.95);
-  else base = materialAlbedo(hit.material, hit);
+  else base = materialAlbedo(hit.material);
 
   // Faces seen head-on are brighter, so the shape of the box is readable.
   float headlight = 0.35 + 0.65 * abs(dot(hit.normal, ray.dir));

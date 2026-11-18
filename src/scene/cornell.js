@@ -43,7 +43,6 @@ export const MAT = Object.freeze({
   LIGHT: 3,
   MIRROR: 4,
   GLASS: 5,
-  CHECKER: 6,
 });
 
 /*
@@ -68,14 +67,6 @@ export const MATERIALS = Object.freeze([
   },
   { id: MAT.MIRROR, name: 'mirror', type: MATERIAL_TYPE.MIRROR, albedo: [0.95, 0.95, 0.95] },
   { id: MAT.GLASS, name: 'glass', type: MATERIAL_TYPE.GLASS, albedo: [1, 1, 1], ior: 1.5 },
-  {
-    id: MAT.CHECKER,
-    name: 'checker floor',
-    type: MATERIAL_TYPE.DIFFUSE,
-    albedo: [0.725, 0.71, 0.68],
-    albedo2: [0.15, 0.15, 0.15],
-    checkerTiles: 8,
-  },
 ]);
 
 // ---------------------------------------------------------------------------
@@ -228,15 +219,13 @@ export function createClassicScene() {
 }
 
 /**
- * Scene B: same room and light, a mirror sphere and a glass sphere, and a checker floor
- * that makes reflection and refraction easy to see. Radiosity alone cannot model the spheres
+ * Scene B: the same room, light and white floor as the original box, with a mirror sphere
+ * and a glass sphere instead of the blocks. Radiosity alone cannot model the spheres
  * (they are not diffuse), so it runs as a two-pass method: radiosity for the diffuse quads,
  * then ray tracing through the mirror and the glass (report Section 7.1).
  */
 export function createSpheresScene() {
-  const quads = roomQuads({ leftWall: MAT.RED, rightWall: MAT.GREEN }).map((q) =>
-    q.label === 'floor' ? { ...q, material: MAT.CHECKER } : q,
-  );
+  const quads = roomQuads({ leftWall: MAT.RED, rightWall: MAT.GREEN });
   return normalizeScene({
     id: 'spheres',
     name: 'Spheres (mirror and glass)',
@@ -325,7 +314,7 @@ export function quadGroups(scene) {
  * Flattens a scene into vec4-aligned Float32Arrays for `uniform vec4` arrays:
  * - quads, 4 × vec4 each: (origin, material), (u, 0), (v, 0), (normal, 0)
  * - spheres, 2 × vec4 each: (center, radius), (material, 0, 0, 0)
- * - materials, 3 × vec4 each: (albedo, type), (emission, ior), (albedo2, checkerTiles)
+ * - materials, 2 × vec4 each: (albedo, type), (emission, ior)
  * - groups, 2 × vec4 each: (box min, first quad), (box max, quad count)
  */
 export function packScene(scene) {
@@ -344,19 +333,9 @@ export function packScene(scene) {
     spheres.set([...sp.center, sp.radius, sp.material, 0, 0, 0], i * 8);
   });
 
-  const materials = new Float32Array(scene.materials.length * 12);
+  const materials = new Float32Array(scene.materials.length * 8);
   scene.materials.forEach((m, i) => {
-    materials.set(
-      [
-        ...m.albedo,
-        m.type,
-        ...(m.emission ?? [0, 0, 0]),
-        m.ior ?? 1,
-        ...(m.albedo2 ?? m.albedo),
-        m.checkerTiles ?? 0,
-      ],
-      i * 12,
-    );
+    materials.set([...m.albedo, m.type, ...(m.emission ?? [0, 0, 0]), m.ior ?? 1], i * 8);
   });
 
   const { roomQuadCount, groups: groupList } = quadGroups(scene);

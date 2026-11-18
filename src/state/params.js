@@ -79,7 +79,7 @@ export const METHODS = Object.freeze([
 
 export const SCENES = Object.freeze([
   { id: 'classic', name: 'Classic', detail: 'Two blocks, all diffuse' },
-  { id: 'spheres', name: 'Spheres', detail: 'Mirror, glass and checker floor' },
+  { id: 'spheres', name: 'Spheres', detail: 'Mirror and glass spheres' },
 ]);
 
 export const params = writable({ ...DEFAULT_PARAMS });

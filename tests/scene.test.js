@@ -37,10 +37,10 @@ describe('scene contents', () => {
     expect(classic.supportsRadiosity).toBe(true);
   });
 
-  it('spheres: 9 room quads, mirror and glass spheres, checker floor, two-pass radiosity', () => {
+  it('spheres: 9 room quads, white floor as in the original box, two-pass radiosity', () => {
     expect(spheres.quads).toHaveLength(9);
     expect(spheres.spheres.map((s) => s.material)).toEqual([MAT.MIRROR, MAT.GLASS]);
-    expect(spheres.quads.find((q) => q.label === 'floor').material).toBe(MAT.CHECKER);
+    expect(spheres.quads.find((q) => q.label === 'floor').material).toBe(MAT.WHITE);
     expect(spheres.supportsRadiosity).toBe(true);
     expect(spheres.twoPassRadiosity).toBe(true);
   });
@@ -150,7 +150,7 @@ describe('packScene', () => {
       const packed = packScene(scene);
       expect(packed.quads).toHaveLength(scene.quads.length * 16);
       expect(packed.spheres).toHaveLength(scene.spheres.length * 8);
-      expect(packed.materials).toHaveLength(scene.materials.length * 12);
+      expect(packed.materials).toHaveLength(scene.materials.length * 8);
       expect(packed.quadCount).toBeLessThanOrEqual(SHADER_LIMITS.MAX_QUADS);
       expect(packed.lightIndex).toBe(scene.light.quadIndex);
     }
