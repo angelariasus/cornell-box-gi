@@ -41,7 +41,8 @@
       try: {
         classic:
           'Orbit the camera (nothing is recomputed), move Shown step, or turn smooth shading off.',
-        spheres: '',
+        spheres:
+          'Two-pass: radiosity for the walls, ray tracing through the spheres. No caustic under the glass until you turn the photon map on.',
       },
     },
     debug: {

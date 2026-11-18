@@ -6,7 +6,7 @@
   import { causticsState } from '../state/caustics.js';
 
   const showCaustics = $derived(
-    $params.scene === 'spheres' && ($params.mode === 'whitted' || $params.mode === 'path'),
+    $params.scene === 'spheres' && ['whitted', 'path', 'radiosity'].includes($params.mode),
   );
   const formatPhotons = (v) => `${Math.round(2 ** v / 1000).toLocaleString('en-US')}k`;
 

@@ -79,7 +79,7 @@ const MODES = {
   radiosity: {
     source: radiosityFrag,
     file: 'radiosity.frag',
-    parts: [],
+    parts: [CAUSTICS],
     maxSamples: 16,
     toneMapping: 1,
   },

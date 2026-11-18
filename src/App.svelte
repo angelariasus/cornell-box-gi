@@ -53,7 +53,7 @@
       }
 
       // The caustic photon map is traced on demand for scenes with mirrors or glass.
-      const usesCaustics = p.mode === 'whitted' || p.mode === 'path';
+      const usesCaustics = ['whitted', 'path', 'radiosity'].includes(p.mode);
       if (usesCaustics && p.causticsEnabled && scene.spheres.length > 0) {
         caustics.trace(scene, {
           photons: p.causticsPhotons,
