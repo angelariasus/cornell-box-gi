@@ -199,6 +199,77 @@ vec2 random2() {
 }
 
 // ---------------------------------------------------------------------------
+// Sampling
+// ---------------------------------------------------------------------------
+
+// Orthonormal basis (t, b, n) around a unit normal (Duff et al. 2017).
+mat3 basisFromNormal(vec3 n) {
+  float s = n.z >= 0.0 ? 1.0 : -1.0;
+  float a = -1.0 / (s + n.z);
+  float b = n.x * n.y * a;
+  vec3 t = vec3(1.0 + s * n.x * n.x * a, s * b, -s * n.x);
+  vec3 bt = vec3(b, s + n.y * n.y * a, -n.y);
+  return mat3(t, bt, n);
+}
+
+// Direction on the hemisphere around n with density p = cos(theta) / pi
+// (importance sampling of the Lambertian cosine, report Example 4b).
+vec3 sampleCosineHemisphere(vec3 n) {
+  vec2 u = random2();
+  float r = sqrt(u.x);
+  float phi = 2.0 * PI * u.y;
+  vec3 local = vec3(r * cos(phi), r * sin(phi), sqrt(max(0.0, 1.0 - u.x)));
+  return basisFromNormal(n) * local;
+}
+
+// Direction on the hemisphere around n with constant density p = 1 / (2 pi).
+vec3 sampleUniformHemisphere(vec3 n) {
+  vec2 u = random2();
+  float cosTheta = u.x;
+  float sinTheta = sqrt(max(0.0, 1.0 - cosTheta * cosTheta));
+  float phi = 2.0 * PI * u.y;
+  vec3 local = vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
+  return basisFromNormal(n) * local;
+}
+
+// Schlick's approximation of the Fresnel reflectance; n1 is the index on the incident side.
+float fresnelSchlick(float cosTheta, float n1, float n2) {
+  float r0 = (n1 - n2) / (n1 + n2);
+  r0 *= r0;
+  return r0 + (1.0 - r0) * pow(1.0 - clamp(cosTheta, 0.0, 1.0), 5.0);
+}
+
+// ---------------------------------------------------------------------------
+// Area light (quad uLightIndex)
+// ---------------------------------------------------------------------------
+
+vec3 lightNormal() {
+  return uQuads[uLightIndex * 4 + 3].xyz;
+}
+
+float lightArea() {
+  return length(cross(uQuads[uLightIndex * 4 + 1].xyz, uQuads[uLightIndex * 4 + 2].xyz));
+}
+
+vec3 lightEmission() {
+  return materialEmission(int(uQuads[uLightIndex * 4].w + 0.5));
+}
+
+vec3 lightPoint(vec2 st) {
+  return uQuads[uLightIndex * 4].xyz + st.x * uQuads[uLightIndex * 4 + 1].xyz +
+    st.y * uQuads[uLightIndex * 4 + 2].xyz;
+}
+
+vec3 lightCenter() {
+  return lightPoint(vec2(0.5));
+}
+
+// Uniformly distributed point on the light (density 1 / area).
+vec3 sampleLightPoint() {
+  return lightPoint(random2());
+}
+
+// ---------------------------------------------------------------------------
 // Camera
 // ---------------------------------------------------------------------------
 

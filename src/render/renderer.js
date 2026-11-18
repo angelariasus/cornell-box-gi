@@ -25,6 +25,7 @@ import commonGlsl from './shaders/common.glsl?raw';
 import accumulateGlsl from './shaders/accumulate.glsl?raw';
 import displayFrag from './shaders/display.frag?raw';
 import debugFrag from './shaders/debug.frag?raw';
+import phongFrag from './shaders/phong.frag?raw';
 
 const MAX_SAMPLES_PER_FRAME = 8;
 const MAX_DEVICE_PIXEL_RATIO = 2;
@@ -36,6 +37,7 @@ const STATS_INTERVAL_MS = 250;
  * `toneMapping` is off for the debug view so material colors are shown as they are.
  */
 const MODES = {
+  phong: { source: phongFrag, file: 'phong.frag', maxSamples: 16, toneMapping: 1 },
   debug: { source: debugFrag, file: 'debug.frag', maxSamples: 16, toneMapping: 0 },
 };
 
@@ -53,6 +55,9 @@ const DEFAULT_PARAMS = {
   resolutionScale: 1,
   samplesPerFrame: 1,
   debugView: 'albedo',
+  phongShininess: 32,
+  phongSpecular: 0.1,
+  phongAmbient: 0.05,
 };
 
 /** Parameters that only affect the display pass: changing them keeps the accumulation. */
@@ -74,7 +79,7 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
 
   let scene = null;
   let packed = null;
-  let mode = 'debug';
+  let mode = 'phong';
   let params = { ...DEFAULT_PARAMS };
 
   let sampleCount = 0;
@@ -213,6 +218,15 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
     gl.uniform1i(program.loc('uLightIndex'), packed.lightIndex);
   }
 
+  /** Method-specific settings. Uniforms a program does not declare are ignored by WebGL. */
+  function setMethodUniforms(program) {
+    const { gl } = context;
+    gl.uniform1i(program.loc('uDebugView'), params.debugView === 'normals' ? 1 : 0);
+    gl.uniform1f(program.loc('uShininess'), params.phongShininess);
+    gl.uniform1f(program.loc('uSpecular'), params.phongSpecular);
+    gl.uniform1f(program.loc('uAmbient'), params.phongAmbient);
+  }
+
   function setCameraUniforms(program, width, height) {
     const { gl } = context;
     const f = camera.frame();
@@ -220,8 +234,12 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
     gl.uniform3fv(program.loc('uCamForward'), f.forward);
     gl.uniform3fv(program.loc('uCamRight'), f.right);
     gl.uniform3fv(program.loc('uCamUp'), f.up);
-    gl.uniform1f(program.loc('uTanHalfFov'), Math.tan((camera.fovY * Math.PI) / 360));
-    gl.uniform1f(program.loc('uAspect'), width / height);
+    // The official view is square. On portrait screens keep the horizontal field of view
+    // instead, so the whole box stays visible.
+    const aspect = width / height;
+    const tanHalfFov = Math.tan((camera.fovY * Math.PI) / 360) / Math.min(aspect, 1);
+    gl.uniform1f(program.loc('uTanHalfFov'), tanHalfFov);
+    gl.uniform1f(program.loc('uAspect'), aspect);
   }
 
   function methodPass() {
@@ -239,7 +257,7 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
     gl.uniform1i(program.loc('uSamplesPerFrame'), k);
     gl.uniform1ui(program.loc('uFrame'), frameIndex);
     gl.uniform2f(program.loc('uResolution'), write.width, write.height);
-    gl.uniform1i(program.loc('uDebugView'), params.debugView === 'normals' ? 1 : 0);
+    setMethodUniforms(program);
     setSceneUniforms(program);
     setCameraUniforms(program, write.width, write.height);
 
@@ -366,6 +384,41 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
     /** Restarts the accumulation from zero samples. */
     restart() {
       resetAccumulation();
+    },
+
+    /**
+     * GPU cost of the current method: renders `passes` method passes back to back, waits for
+     * the GPU (readPixels forces a sync) and returns the average milliseconds per pass. The
+     * frame-time statistic cannot be used for this in a background tab, where the browser
+     * throttles requestAnimationFrame. The accumulation restarts afterwards.
+     */
+    benchmark(passes = 10) {
+      if (!ready || !packed || !targets[0]) return null;
+      const { gl } = context;
+      const pixel = new Float32Array(4);
+      const sync = () => {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, targets[0].framebuffer);
+        gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.FLOAT, pixel);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      };
+      sampleCount = 0;
+      methodPass();
+      sync(); // warm-up pass, also flushes earlier work
+      const start = performance.now();
+      for (let i = 0; i < passes; i++) {
+        sampleCount = 1; // keep the shader on its normal path without hitting maxSamples
+        methodPass();
+      }
+      sync();
+      const msPerPass = (performance.now() - start) / passes;
+      resetAccumulation();
+      return {
+        mode,
+        msPerPass,
+        width: targets[0].width,
+        height: targets[0].height,
+        samplesPerPass: params.samplesPerFrame,
+      };
     },
 
     /** PNG of the current image. */
