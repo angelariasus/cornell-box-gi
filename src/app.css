@@ -1,9 +1,15 @@
 :root {
   --bg: #111316;
+  --panel: #16191d;
+  --surface: #1d2126;
+  --surface-hover: #242930;
   --fg: #e8e8e8;
   --muted: #9aa0a6;
   --border: #2a2e33;
   --accent: #e0a526;
+  --accent-soft: rgb(224 165 38 / 0.14);
+  --danger: #ff8a80;
+  --radius: 8px;
 
   color-scheme: dark;
   font-family:
@@ -15,6 +21,7 @@
   line-height: 1.5;
   color: var(--fg);
   background: var(--bg);
+  accent-color: var(--accent);
 }
 
 *,
@@ -27,4 +34,77 @@ html,
 body {
   margin: 0;
   height: 100%;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+/* ---- Panel building blocks shared by the UI components ---- */
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.group h2 {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.button {
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.button:hover {
+  background: var(--surface-hover);
+}
+
+.button:focus-visible,
+.segmented button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.segmented {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.segmented button {
+  padding: 0.35rem 0.5rem;
+  border: none;
+  border-radius: calc(var(--radius) - 3px);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.segmented button.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
 }

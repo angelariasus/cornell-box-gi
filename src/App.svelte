@@ -3,6 +3,12 @@
   import { createRenderer } from './render/renderer.js';
   import { createScene } from './scene/cornell.js';
   import { params, rendererParams, stats, status } from './state/params.js';
+  import Controls from './ui/Controls.svelte';
+  import MethodPicker from './ui/MethodPicker.svelte';
+  import ScenePicker from './ui/ScenePicker.svelte';
+  import Stats from './ui/Stats.svelte';
+  import StatusBanner from './ui/StatusBanner.svelte';
+  import Toolbar from './ui/Toolbar.svelte';
 
   let canvas;
   let renderer = $state(null);
@@ -12,6 +18,8 @@
       onStats: (s) => stats.set(s),
       onStatus: (s) => status.set(s),
     });
+    // Console access for testing on other machines, e.g. `viewer.benchmark(20)`.
+    window.viewer = renderer;
 
     let sceneId = null;
     const unsubscribe = params.subscribe((p) => {
@@ -32,67 +40,31 @@
 
 <main class="layout">
   <section class="viewport">
-    <canvas bind:this={canvas} aria-label="Render output"></canvas>
-    {#if $status.state !== 'ready'}
-      <div class="status" class:error={$status.state === 'error'}>
-        {#if $status.state === 'compiling'}
-          Compiling shaders…
-        {:else if $status.state === 'no-webgl2'}
-          This browser does not support WebGL2.
-        {:else if $status.state === 'context-lost'}
-          The graphics context was lost. Waiting for the browser to restore it…
-        {:else if $status.state === 'error'}
-          <pre>{$status.message}</pre>
-        {/if}
-      </div>
-    {/if}
+    <canvas bind:this={canvas} aria-label="Rendered Cornell box. Drag to orbit, scroll to zoom."
+    ></canvas>
+    <StatusBanner />
   </section>
 
-  <!-- Temporary development panel (Phase 2). Replaced by the real panel in Phase 3. -->
   <aside class="panel">
-    <h1>Global Illumination Viewer</h1>
-    <p class="subtitle">Phase 2 · geometry check</p>
+    <header>
+      <h1>Global Illumination Viewer</h1>
+      <p class="hint">The Cornell box rendered with four illumination methods</p>
+    </header>
 
-    <label>
-      Scene
-      <select bind:value={$params.scene}>
-        <option value="classic">Classic (two blocks)</option>
-        <option value="spheres">Spheres (mirror and glass)</option>
-      </select>
-    </label>
+    <ScenePicker />
+    <MethodPicker />
+    <Controls />
+    <Toolbar {renderer} />
+    <Stats />
 
-    <fieldset>
-      <legend>Debug view</legend>
-      <label><input type="radio" bind:group={$params.debugView} value="albedo" /> Materials</label>
-      <label><input type="radio" bind:group={$params.debugView} value="normals" /> Normals</label>
-    </fieldset>
-
-    <label>
-      Resolution scale: {$params.resolutionScale.toFixed(2)}
-      <input type="range" min="0.25" max="1" step="0.05" bind:value={$params.resolutionScale} />
-    </label>
-
-    <button type="button" onclick={() => renderer?.resetCamera()}>Official camera</button>
-
-    <dl class="stats">
-      <dt>Samples</dt>
-      <dd>{$stats.samples} / {$stats.maxSamples}</dd>
-      <dt>Resolution</dt>
-      <dd>{$stats.width} × {$stats.height}</dd>
-      <dt>Frame time</dt>
-      <dd>{$stats.converged ? 'idle' : `${$stats.frameMs.toFixed(1)} ms`}</dd>
-      <dt>Buffer</dt>
-      <dd>{$stats.format}</dd>
-    </dl>
-
-    <p class="hint">Drag to orbit · wheel or pinch to zoom</p>
+    <footer class="hint">Drag to orbit · scroll or pinch to zoom</footer>
   </aside>
 </main>
 
 <style>
   .layout {
     display: grid;
-    grid-template-columns: 1fr 320px;
+    grid-template-columns: 1fr 340px;
     height: 100vh;
   }
 
@@ -113,87 +85,30 @@
     cursor: grabbing;
   }
 
-  .status {
-    position: absolute;
-    inset: auto 1rem 1rem 1rem;
-    padding: 0.6rem 0.8rem;
-    border-radius: 6px;
-    background: rgb(0 0 0 / 0.75);
-    font-size: 0.9rem;
-  }
-
-  .status.error {
-    color: #ff8a80;
-    max-height: 50%;
-    overflow: auto;
-  }
-
-  .status pre {
-    margin: 0;
-    white-space: pre-wrap;
-  }
-
   .panel {
     display: flex;
     flex-direction: column;
-    gap: 0.9rem;
+    gap: 1.25rem;
     padding: 1.25rem;
     border-left: 1px solid var(--border);
+    background: var(--panel);
     overflow-y: auto;
   }
 
   h1 {
-    font-size: 1.15rem;
-    margin: 0;
+    margin: 0 0 0.15rem;
+    font-size: 1.1rem;
   }
 
-  .subtitle,
-  .hint {
-    margin: 0;
-    color: var(--muted);
-    font-size: 0.85rem;
+  footer {
+    margin-top: auto;
   }
 
-  label {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    font-size: 0.9rem;
-  }
-
-  fieldset {
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    display: flex;
-    gap: 1rem;
-  }
-
-  fieldset label {
-    flex-direction: row;
-    align-items: center;
-  }
-
-  .stats {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.2rem 0.8rem;
-    margin: 0;
-    font-size: 0.85rem;
-  }
-
-  .stats dt {
-    color: var(--muted);
-  }
-
-  .stats dd {
-    margin: 0;
-    font-variant-numeric: tabular-nums;
-  }
-
+  /* Narrow screens: the panel moves below the canvas. */
   @media (max-width: 800px) {
     .layout {
       grid-template-columns: 1fr;
-      grid-template-rows: 60vh auto;
+      grid-template-rows: min(62vh, 100vw) auto;
       height: auto;
     }
 
