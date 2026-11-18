@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  fresnelDielectric,
   fresnelSchlick,
   intersectQuad,
   intersectScene,
@@ -64,6 +65,28 @@ describe('fresnelSchlick', () => {
   it('gives 4% at normal incidence on glass and 100% at grazing angles', () => {
     expect(fresnelSchlick(1, 1, 1.5)).toBeCloseTo(0.04, 10);
     expect(fresnelSchlick(0, 1, 1.5)).toBeCloseTo(1, 10);
+  });
+});
+
+describe('fresnelDielectric', () => {
+  const cosT = (cosI, n1, n2) => {
+    const sin2T = (n1 / n2) ** 2 * (1 - cosI * cosI);
+    return sin2T > 1 ? null : Math.sqrt(1 - sin2T);
+  };
+
+  it('gives 4% at normal incidence on glass, like Schlick', () => {
+    expect(fresnelDielectric(1, 1, 1, 1.5)).toBeCloseTo(0.04, 10);
+  });
+
+  it('is exactly zero when both media have the same index, at any angle', () => {
+    for (const cosI of [1, 0.5, 0.1]) {
+      expect(fresnelDielectric(cosI, cosT(cosI, 1.5, 1.5), 1.5, 1.5)).toBeCloseTo(0, 12);
+    }
+  });
+
+  it('grows towards grazing incidence and is 1 on total internal reflection', () => {
+    expect(fresnelDielectric(0.2, cosT(0.2, 1, 1.5), 1, 1.5)).toBeGreaterThan(0.3);
+    expect(fresnelDielectric(0.5, cosT(0.5, 1.5, 1), 1.5, 1)).toBe(1);
   });
 });
 

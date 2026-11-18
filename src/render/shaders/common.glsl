@@ -162,6 +162,13 @@ float materialIor(int m) {
   return uMaterials[m * 3 + 1].w;
 }
 
+// Refractive index of glass set from the panel (0 keeps the material's own value).
+uniform float uGlassIor;
+
+float glassIor(int m) {
+  return uGlassIor > 0.0 ? uGlassIor : materialIor(m);
+}
+
 // Reflectance at a hit; applies the procedural checker pattern when the material has one.
 vec3 materialAlbedo(int m, Hit hit) {
   vec4 pattern = uMaterials[m * 3 + 2];
@@ -230,6 +237,31 @@ vec3 sampleUniformHemisphere(vec3 n) {
   float phi = 2.0 * PI * u.y;
   vec3 local = vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
   return basisFromNormal(n) * local;
+}
+
+// Exact Fresnel reflectance of unpolarized light at a dielectric interface (same as
+// fresnelDielectric() in math.js). It is 0 when n1 == n2, unlike Schlick's approximation.
+float fresnelDielectric(float cosI, float cosT, float n1, float n2) {
+  float rs = (n1 * cosI - n2 * cosT) / (n1 * cosI + n2 * cosT);
+  float rp = (n2 * cosI - n1 * cosT) / (n2 * cosI + n1 * cosT);
+  return 0.5 * (rs * rs + rp * rp);
+}
+
+// Refraction through a glass surface hit by `dir`. Returns the transmitted direction (zero on
+// total internal reflection) and the exact Fresnel reflectance F in `reflectance`.
+vec3 refractGlass(vec3 dir, Hit hit, out float reflectance) {
+  float ior = glassIor(hit.material);
+  float n1 = hit.frontFace ? 1.0 : ior; // entering from air, or leaving the glass
+  float n2 = hit.frontFace ? ior : 1.0;
+  vec3 t = refract(dir, hit.normal, n1 / n2);
+  if (dot(t, t) == 0.0) {
+    reflectance = 1.0; // total internal reflection
+    return t;
+  }
+  float cosI = -dot(dir, hit.normal);
+  float cosT = -dot(t, hit.normal);
+  reflectance = fresnelDielectric(cosI, cosT, n1, n2);
+  return t;
 }
 
 // Schlick's approximation of the Fresnel reflectance; n1 is the index on the incident side.

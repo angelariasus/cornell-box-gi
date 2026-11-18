@@ -240,9 +240,12 @@ export function createSpheresScene() {
     name: 'Spheres (mirror and glass)',
     supportsRadiosity: false,
     quads,
+    // The spheres float 1 data unit (0.2% of their size) above the floor. Touching it
+    // exactly leaves a gap thinner than the ray offset near the contact point, where
+    // refracted rays would slip under the floor and show a black spot.
     spheres: [
-      { label: 'mirror sphere', center: [370, 100, 370], radius: 100, material: MAT.MIRROR },
-      { label: 'glass sphere', center: [185, 100, 170], radius: 100, material: MAT.GLASS },
+      { label: 'mirror sphere', center: [370, 101, 370], radius: 100, material: MAT.MIRROR },
+      { label: 'glass sphere', center: [185, 101, 170], radius: 100, material: MAT.GLASS },
     ],
   });
 }

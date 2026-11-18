@@ -72,6 +72,19 @@ export function fresnelSchlick(cosTheta, n1, n2) {
   return r0 + (1 - r0) * (1 - Math.min(1, Math.max(0, cosTheta))) ** 5;
 }
 
+/**
+ * Exact Fresnel reflectance of an unpolarized ray at a dielectric interface, from the
+ * cosines of the incident and transmitted angles. Unlike Schlick's approximation it is
+ * exactly 0 when both indices are equal. Returns 1 on total internal reflection
+ * (`cosT` is null). The GLSL `fresnelDielectric()` is identical.
+ */
+export function fresnelDielectric(cosI, cosT, n1, n2) {
+  if (cosT === null) return 1;
+  const rs = (n1 * cosI - n2 * cosT) / (n1 * cosI + n2 * cosT);
+  const rp = (n2 * cosI - n1 * cosT) / (n2 * cosI + n1 * cosT);
+  return 0.5 * (rs * rs + rp * rp);
+}
+
 // ---------------------------------------------------------------------------
 // Ray-primitive intersection
 // ---------------------------------------------------------------------------

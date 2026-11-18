@@ -25,20 +25,38 @@ import commonGlsl from './shaders/common.glsl?raw';
 import accumulateGlsl from './shaders/accumulate.glsl?raw';
 import displayFrag from './shaders/display.frag?raw';
 import debugFrag from './shaders/debug.frag?raw';
+import localGlsl from './shaders/local.glsl?raw';
 import phongFrag from './shaders/phong.frag?raw';
+import whittedFrag from './shaders/whitted.frag?raw';
 
 const MAX_SAMPLES_PER_FRAME = 8;
 const MAX_DEVICE_PIXEL_RATIO = 2;
 const INTERACTION_SCALE = 0.5;
 const STATS_INTERVAL_MS = 250;
 
+const LOCAL = { name: 'local.glsl', source: localGlsl };
+
 /**
- * Per-mode settings. `maxSamples` stops deterministic modes once they are antialiased;
- * `toneMapping` is off for the debug view so material colors are shown as they are.
+ * Per-mode settings. `parts` are shared GLSL files inserted between common.glsl and the
+ * method; `maxSamples` stops deterministic modes once they are antialiased; `toneMapping`
+ * is off for the debug view so material colors are shown as they are.
  */
 const MODES = {
-  phong: { source: phongFrag, file: 'phong.frag', maxSamples: 16, toneMapping: 1 },
-  debug: { source: debugFrag, file: 'debug.frag', maxSamples: 16, toneMapping: 0 },
+  phong: {
+    source: phongFrag,
+    file: 'phong.frag',
+    parts: [LOCAL],
+    maxSamples: 16,
+    toneMapping: 1,
+  },
+  whitted: {
+    source: whittedFrag,
+    file: 'whitted.frag',
+    parts: [LOCAL],
+    maxSamples: 16,
+    toneMapping: 1,
+  },
+  debug: { source: debugFrag, file: 'debug.frag', parts: [], maxSamples: 16, toneMapping: 0 },
 };
 
 export const RENDER_MODES = Object.freeze(Object.keys(MODES));
@@ -58,6 +76,8 @@ const DEFAULT_PARAMS = {
   phongShininess: 32,
   phongSpecular: 0.1,
   phongAmbient: 0.05,
+  whittedDepth: 5,
+  glassIor: 1.5,
 };
 
 /** Parameters that only affect the display pass: changing them keeps the accumulation. */
@@ -124,6 +144,7 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
         const fragment = assembleShader(
           [
             { name: 'common.glsl', source: commonGlsl },
+            ...config.parts,
             { name: config.file, source: config.source },
             { name: 'accumulate.glsl', source: accumulateGlsl },
           ],
@@ -225,6 +246,8 @@ export function createRenderer(canvas, { onStats, onStatus } = {}) {
     gl.uniform1f(program.loc('uShininess'), params.phongShininess);
     gl.uniform1f(program.loc('uSpecular'), params.phongSpecular);
     gl.uniform1f(program.loc('uAmbient'), params.phongAmbient);
+    gl.uniform1i(program.loc('uMaxDepth'), params.whittedDepth);
+    gl.uniform1f(program.loc('uGlassIor'), params.glassIor);
   }
 
   function setCameraUniforms(program, width, height) {
