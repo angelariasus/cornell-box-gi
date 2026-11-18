@@ -24,6 +24,7 @@ const requiredFiles = [
   'src/radiosity/patches.js',
   'src/radiosity/formFactors.js',
   'src/radiosity/solvers.js',
+  'src/radiosity/solve.js',
   'src/radiosity/worker.js',
 ];
 
