@@ -9,6 +9,7 @@ export default {
     canvas: 'Caja de Cornell renderizada. Arrastra para girar y usa la rueda para acercar.',
     language: 'Idioma',
     moreInfo: 'Más información',
+    sourceCode: 'Código fuente en GitHub',
   },
   scene: { heading: 'Escena' },
   scenes: {
