@@ -7,6 +7,7 @@ export default {
     canvas: 'Rendered Cornell box. Drag to orbit, scroll to zoom.',
     language: 'Language',
     moreInfo: 'More information',
+    sourceCode: 'Source code on GitHub',
   },
   scene: { heading: 'Scene' },
   scenes: {
